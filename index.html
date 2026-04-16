@@ -728,7 +728,7 @@
 
         function createVideoCard(video) {
             return `
-                <a href="video2.html?id=${video.numericId || video.id}" class="video-card group block bg-card border border-border rounded-xl overflow-hidden hover:border-primary hover:-translate-y-1 transition-all">
+                <a href="video.html?id=${video.numericId || video.id}" class="video-card group block bg-card border border-border rounded-xl overflow-hidden hover:border-primary hover:-translate-y-1 transition-all">
                     <div class="relative aspect-video">
                         <img src="${video.thumbnail || ''}" 
                             alt="${escapeHtml(video.title)}" 
