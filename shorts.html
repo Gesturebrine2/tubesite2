@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title id="pageTitle">Shorts - Xplitleaks</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #000;
+            --text-color: #fff;
+            --like-color: #ff0050;
+            --dislike-color: #00f2ea;
+            --icon-size: 30px;
+            --accent: #ff0050;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--accent), #00f2ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Video Container */
+        #video-container {
+            height: 100dvh;
+            width: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-snap-stop: always;
+            overscroll-behavior: contain;
+            scrollbar-width: none;
+            padding-top: 60px;
+        }
+
+        #video-container::-webkit-scrollbar { 
+            display: none; 
+        }
+
+        .video-card {
+            position: relative;
+            height: calc(100dvh - 60px);
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            background: #000;
+        }
+
+        .video-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            background: #000;
+            display: block;
+        }
+
+        @media (min-aspect-ratio: 9/16) {
+            .video-wrapper, video {
+                height: 100%;
+                width: auto;
+            }
+        }
+
+        @media (max-aspect-ratio: 9/16) {
+            .video-wrapper, video {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        /* Outstream Ad Card */
+        .ad-card {
+            position: relative;
+            height: calc(100dvh - 60px);
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            border: 1px solid #333;
+        }
+
+        .ad-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .ad-label {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(255,0,80,0.8);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        /* Mute Control */
+        #mute-control {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        #mute-control svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        /* UI Overlay */
+        .ui-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 60px 15px 40px 15px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.4));
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        .video-info { 
+            max-width: 65%; 
+            pointer-events: auto; 
+        }
+
+        .video-info h3 { 
+            margin: 0 0 8px 0; 
+            font-size: 1.1rem; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3); 
+        }
+
+        .video-info .creator {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 4px;
+            color: var(--accent);
+        }
+
+        .video-info p { 
+            margin: 0; 
+            font-size: 0.9rem; 
+            opacity: 0.9; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3); 
+        }
+
+        .side-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .action-btn:active { 
+            transform: scale(0.92); 
+        }
+
+        .action-btn span { 
+            font-size: 11px; 
+            margin-top: 4px; 
+            font-weight: 600; 
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5); 
+        }
+
+        .icon {
+            width: var(--icon-size);
+            height: var(--icon-size);
+            fill: white;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        }
+
+        .action-btn.liked .icon { 
+            fill: var(--like-color); 
+        }
+
+        .action-btn.disliked .icon { 
+            fill: var(--dislike-color); 
+        }
+
+        /* Loading Indicator */
+        .loading-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100dvh - 60px);
+            width: 100%;
+            background: #000;
+            scroll-snap-align: start;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Report Modal */
+        #report-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1999;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        #report-overlay.active {
+            visibility: visible;
+            opacity: 1;
+            transition: opacity 0.2s ease, visibility 0s linear 0s;
+        }
+
+        #report-modal {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background: #1a1a1a;
+            border-radius: 20px 20px 0 0;
+            transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            padding: 20px;
+            box-sizing: border-box;
+            color: white;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        #report-modal.active { 
+            bottom: 0; 
+        }
+
+        .report-option { 
+            padding: 18px; 
+            border-bottom: 1px solid #333; 
+            cursor: pointer; 
+            text-align: center; 
+            font-size: 1rem; 
+            transition: background 0.2s;
+        }
+
+        .report-option:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .report-header { 
+            text-align: center; 
+            font-weight: bold; 
+            padding-bottom: 15px; 
+            color: #888; 
+            text-transform: uppercase; 
+            font-size: 0.8rem; 
+        }
+
+        /* Heart Animation */
+        .heart-pop {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            fill: white;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0;
+        }
+
+        @keyframes heartAnimation {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        .animate-heart { 
+            animation: heartAnimation 0.6s ease-out forwards; 
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--accent);
+            transition: width 0.1s linear;
+            z-index: 100;
+        }
+
+        /* Footer */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            border-top: 1px solid #333;
+            padding: 16px;
+            z-index: 500;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        footer.visible {
+            transform: translateY(0);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .footer-link {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .footer-link:hover {
+            color: var(--accent);
+        }
+
+        /* Desktop Layout */
+        @media (min-width: 768px) {
+            #video-container {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-content: flex-start;
+                gap: 16px;
+                padding: 76px 16px 16px;
+                height: auto;
+                min-height: 100dvh;
+                overflow-y: auto;
+            }
+
+            .video-card, .ad-card, .loading-card {
+                width: calc(33.333% - 11px);
+                height: 80vh;
+                scroll-snap-align: none;
+                border-radius: 12px;
+                overflow: hidden;
+            }
+
+            .video-wrapper {
+                height: 100%;
+            }
+
+            video {
+                height: 100%;
+                width: 100%;
+                object-fit: cover;
+            }
+
+            .ui-overlay {
+                padding: 20px;
+            }
+
+            .side-bar {
+                flex-direction: row;
+                gap: 20px;
+                position: absolute;
+                right: 20px;
+                bottom: 80px;
+            }
+
+            #mute-control {
+                top: 76px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .video-card, .ad-card, .loading-card {
+                width: calc(25% - 12px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <a href="index.html" class="logo" id="siteName">Xplitleaks</a>
+        <div class="header-actions">
+            <button class="header-btn" onclick="toggleMute()" id="muteBtn" title="Toggle Sound">
+                <i class="fas fa-volume-mute" id="muteIcon"></i>
+            </button>
+            <a href="upload.html" class="header-btn" title="Upload">
+                <i class="fas fa-plus"></i>
+            </a>
+            <a href="index.html" class="header-btn" title="Home">
+                <i class="fas fa-home"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Video Container -->
+    <div id="video-container"></div>
+
+    <!-- Report Overlay -->
+    <div id="report-overlay"></div>
+    
+    <!-- Report Modal -->
+    <div id="report-modal">
+        <div class="report-header">Report Content</div>
+        <div class="report-option" data-report="inappropriate">Inappropriate Content</div>
+        <div class="report-option" data-report="spam">Spam</div>
+        <div class="report-option" data-report="misleading">Misleading</div>
+        <div class="report-option" data-report="violence">Violence</div>
+        <div class="report-option" data-report="copyright">Copyright Violation</div>
+        <div class="report-option" style="color: #ff0050;" data-report="cancel">Cancel</div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="footer-content">
+            <a href="index.html" class="footer-link">Home</a>
+            <a href="index.html?category=trending" class="footer-link">Trending</a>
+            <a href="upload.html" class="footer-link">Upload</a>
+            <a href="#" class="footer-link" onclick="showFooter()">More</a>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        const CONFIG = {
+            apiEndpoint: 'https://xplitleaks-api.dylancoral.workers.dev/api',
+            sessionId: localStorage.getItem('sessionId') || generateSessionId()
+        };
+        localStorage.setItem('sessionId', CONFIG.sessionId);
+
+        // ==================== STATE ====================
+        let videos = [];
+        let currentIndex = 0;
+        let isGlobalMuted = true;
+        let siteConfig = {};
+        let viewTrackingQueue = [];
+        let watchedVideoIds = new Set();
+        let isLoading = false;
+        let hasMoreVideos = true;
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSiteConfig();
+            loadInitialVideos();
+            setupScrollObserver();
+            setupFooterToggle();
+        });
+
+        function generateSessionId() {
+            return 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        }
+
+        // ==================== SITE CONFIG ====================
+        async function loadSiteConfig() {
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/config`);
+                siteConfig = await response.json();
+                
+                if (siteConfig.siteName) {
+                    document.getElementById('siteName').textContent = siteConfig.siteName;
+                    document.getElementById('pageTitle').textContent = `Shorts - ${siteConfig.siteName}`;
+                }
+                
+                // Make placement URLs available globally
+                if (siteConfig.placementUrls) {
+                    try {
+                        window.placementUrls = JSON.parse(siteConfig.placementUrls);
+                    } catch(e) {
+                        window.placementUrls = [];
+                    }
+                }
+                
+                if (siteConfig.primaryColor) {
+                    document.documentElement.style.setProperty('--accent', siteConfig.primaryColor);
+                    document.documentElement.style.setProperty('--like-color', siteConfig.primaryColor);
+                }
+            } catch (error) {
+                console.error('Failed to load site config:', error);
+            }
+        }
+
+        // ==================== VIDEO LOADING ====================
+        async function loadInitialVideos() {
+            await loadMoreVideos();
+        }
+
+        async function loadMoreVideos() {
+            if (isLoading || !hasMoreVideos) return;
+            
+            isLoading = true;
+            
+            // Show loading card
+            const container = document.getElementById('video-container');
+            const loadingCard = document.createElement('div');
+            loadingCard.className = 'loading-card';
+            loadingCard.id = 'loadingIndicator';
+            loadingCard.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p style="color: #888; margin-top: 16px;">Loading more...</p>
+            `;
+            container.appendChild(loadingCard);
+            
+            try {
+                // Send batch view tracking before loading new videos
+                await sendBatchViewTracking();
+                
+                const excludeIds = Array.from(watchedVideoIds).join(',');
+                const response = await fetch(
+                    `${CONFIG.apiEndpoint}/shorts/recommend?limit=6&sessionId=${CONFIG.sessionId}&exclude=${excludeIds}`
+                );
+                
+                const data = await response.json();
+                const newVideos = Array.isArray(data) ? data : (data.shorts || []);
+                
+                // Remove loading indicator
+                const loader = document.getElementById('loadingIndicator');
+                if (loader) loader.remove();
+                
+                if (newVideos.length === 0) {
+                    hasMoreVideos = false;
+                    return;
+                }
+                
+                // Add outstream ad every 3 videos
+                const videosWithAds = [];
+                newVideos.forEach((video, index) => {
+                    videosWithAds.push(video);
+                    if ((index + 1) % 3 === 0 && siteConfig.outstreamAdTags) {
+                        videosWithAds.push({ type: 'ad', id: `ad-${Date.now()}-${index}` });
+                    }
+                });
+                
+                videos.push(...videosWithAds);
+                renderVideos(videosWithAds);
+                
+            } catch (error) {
+                console.error('Failed to load videos:', error);
+                const loader = document.getElementById('loadingIndicator');
+                if (loader) {
+                    loader.innerHTML = `
+                        <p style="color: #ff0050;">Failed to load</p>
+                        <button onclick="loadMoreVideos()" style="margin-top: 8px; padding: 8px 16px; background: #ff0050; border: none; color: white; border-radius: 4px; cursor: pointer;">Retry</button>
+                    `;
+                }
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        function renderVideos(newVideos) {
+            const container = document.getElementById('video-container');
+            
+            newVideos.forEach((data, index) => {
+                if (data.type === 'ad') {
+                    renderAdCard(data, container);
+                } else {
+                    renderVideoCard(data, container);
+                }
+            });
+        }
+
+        function renderVideoCard(data, container) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            card.dataset.id = data.numericId || data.id;
+            card.dataset.href = `shorts.html?id=${data.numericId || data.id}`;
+            
+            const videoId = data.numericId || data.id;
+            watchedVideoIds.add(videoId);
+            
+            const isLiked = localStorage.getItem(`short_like_${videoId}`) === 'true';
+            
+            card.innerHTML = `
+                <div class="video-wrapper">
+                    <video loop playsinline muted src="${data.videoUrl}" data-id="${videoId}"></video>
+                    <div class="progress-bar" id="progress-${videoId}"></div>
+                    <svg class="heart-pop" id="heart-${videoId}" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <div class="ui-overlay">
+                        <div class="video-info">
+                            <div class="creator">@${escapeHtml(data.creatorName || 'unknown')}</div>
+                            <h3>${escapeHtml(data.title)}</h3>
+                            <p>${escapeHtml(data.description || '')}</p>
+                        </div>
+                        <div class="side-bar">
+                            <div class="action-btn like-btn ${isLiked ? 'liked' : ''}" onclick="handleLike('${videoId}', this)">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                                <span class="like-count">${formatNumber(data.likes || 0)}</span>
+                            </div>
+                            <div class="action-btn dislike-btn" onclick="handleDislike('${videoId}', this)">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
+                                </svg>
+                                <span>Dislike</span>
+                            </div>
+                            <div class="action-btn share-btn" onclick="handleShare('${videoId}')">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                                </svg>
+                                <span class="share-count">${formatNumber(data.shares || 0)}</span>
+                            </div>
+                            <div class="action-btn report-btn" onclick="openReport('${videoId}')">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6h-5.6z"/>
+                                </svg>
+                                <span>Report</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Double tap to like
+            let lastTap = 0;
+            card.addEventListener('click', (e) => {
+                const now = Date.now();
+                if (now - lastTap < 300) {
+                    // Double tap - like
+                    const likeBtn = card.querySelector('.like-btn');
+                    if (!likeBtn.classList.contains('liked')) {
+                        handleLike(videoId, likeBtn);
+                    }
+                    // Show heart animation
+                    const heart = card.querySelector('.heart-pop');
+                    heart.classList.remove('animate-heart');
+                    void heart.offsetWidth;
+                    heart.classList.add('animate-heart');
+                }
+                lastTap = now;
+            });
+
+            container.appendChild(card);
+            
+            // Observe this video
+            observeVideo(card, videoId);
+        }
+
+        function renderAdCard(data, container) {
+            const card = document.createElement('div');
+            card.className = 'ad-card';
+            card.dataset.id = data.id;
+            
+            let adContent = '<div class="ad-content"><span style="color: #666;">Advertisement</span></div>';
+            
+            if (siteConfig.outstreamAdTags) {
+                try {
+                    const adTags = JSON.parse(siteConfig.outstreamAdTags);
+                    if (adTags.length > 0) {
+                        const adTag = adTags[Math.floor(Math.random() * adTags.length)];
+                        adContent = `
+                            <div class="ad-content">
+                                <div class="ad-label">Ad</div>
+                                <iframe src="${adTag}" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>
+                            </div>
+                        `;
+                    }
+                } catch(e) {}
+            }
+            
+            card.innerHTML = adContent;
+            container.appendChild(card);
+        }
+
+        // ==================== SCROLL OBSERVER ====================
+        function setupScrollObserver() {
+            const container = document.getElementById('video-container');
+            
+            const observerOptions = {
+                root: container,
+                rootMargin: '0px',
+                threshold: 0.7
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (!video) return;
+                    
+                    const videoId = video.dataset.id;
+                    
+                    if (entry.isIntersecting) {
+                        video.muted = isGlobalMuted;
+                        video.play().catch(e => console.log("Autoplay blocked:", e));
+                        
+                        // Start tracking view
+                        startViewTracking(videoId, video);
+                    } else {
+                        video.pause();
+                        
+                        // Stop tracking and queue for sending
+                        stopViewTracking(videoId, video);
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all video cards
+            const observeAllVideos = () => {
+                document.querySelectorAll('.video-card').forEach(card => {
+                    observer.observe(card);
+                });
+            };
+
+            // Initial observation
+            observeAllVideos();
+
+            // Check for more videos when scrolling to 5th from end
+            container.addEventListener('scroll', () => {
+                const cards = document.querySelectorAll('.video-card, .ad-card');
+                const scrollPosition = container.scrollTop + container.clientHeight;
+                const totalHeight = container.scrollHeight;
+                
+                // Load more when within 2 cards of bottom
+                if (scrollPosition > totalHeight - (window.innerHeight * 2)) {
+                    loadMoreVideos();
+                }
+                
+                // Update current index
+                cards.forEach((card, index) => {
+                    const rect = card.getBoundingClientRect();
+                    if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
+                        currentIndex = index;
+                    }
+                });
+                
+                // Save scroll position for resume
+                if (window.placementManager) {
+                    window.placementManager.state.shortsScroll[window.placementManager.tabId] = {
+                        url: window.location.href,
+                        scrollY: container.scrollTop,
+                        currentIndex: currentIndex,
+                        timestamp: Date.now()
+                    };
+                    window.placementManager.saveState();
+                }
+            });
+        }
+
+        // ==================== VIEW TRACKING ====================
+        const activeViewTrackers = new Map();
+
+        function startViewTracking(videoId, videoElement) {
+            const startTime = Date.now();
+            let watchDuration = 0;
+            
+            const tracker = {
+                videoId,
+                startTime,
+                videoElement,
+                interval: setInterval(() => {
+                    if (!videoElement.paused) {
+                        watchDuration += 1;
+                        
+                        // Update progress bar
+                        const progress = (watchDuration / 15) * 100; // 15 seconds = full view
+                        const progressBar = document.getElementById(`progress-${videoId}`);
+                        if (progressBar) {
+                            progressBar.style.width = Math.min(progress, 100) + '%';
+                        }
+                    }
+                }, 1000)
+            };
+            
+            activeViewTrackers.set(videoId, tracker);
+        }
+
+        function stopViewTracking(videoId, videoElement) {
+            const tracker = activeViewTrackers.get(videoId);
+            if (!tracker) return;
+            
+            clearInterval(tracker.interval);
+            
+            const watchTime = (Date.now() - tracker.startTime) / 1000;
+            const videoDuration = videoElement.duration || 0;
+            const watchRatio = videoDuration > 0 ? watchTime / videoDuration : 0;
+            
+            // Queue for batch sending
+            viewTrackingQueue.push({
+                shortId: videoId,
+                watchDuration: watchRatio,
+                watchTime: watchTime
+            });
+            
+            activeViewTrackers.delete(videoId);
+        }
+
+        async function sendBatchViewTracking() {
+            if (viewTrackingQueue.length === 0) return;
+            
+            const batch = [...viewTrackingQueue];
+            viewTrackingQueue = [];
+            
+            try {
+                await fetch(`${CONFIG.apiEndpoint}/short/view/batch`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': CONFIG.sessionId
+                    },
+                    body: JSON.stringify({ views: batch })
+                });
+            } catch (error) {
+                console.error('View tracking error:', error);
+                // Re-queue failed tracks
+                viewTrackingQueue.push(...batch);
+            }
+        }
+
+        // ==================== INTERACTION HANDLERS ====================
+        async function handleLike(videoId, btn) {
+            btn.classList.toggle('liked');
+            const isLiked = btn.classList.contains('liked');
+            
+            localStorage.setItem(`short_like_${videoId}`, isLiked);
+            
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/short/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': CONFIG.sessionId
+                    },
+                    body: JSON.stringify({ shortId: videoId })
+                });
+                
+                const data = await response.json();
+                const countSpan = btn.querySelector('.like-count');
+                if (countSpan) {
+                    const currentCount = parseInt(countSpan.textContent.replace(/[KM]/g, '')) || 0;
+                    if (data.action === 'liked') {
+                        countSpan.textContent = formatNumber(currentCount + 1);
+                    } else {
+                        countSpan.textContent = formatNumber(Math.max(0, currentCount - 1));
+                    }
+                }
+            } catch (error) {
+                console.error('Like error:', error);
+            }
+        }
+
+        function handleDislike(videoId, btn) {
+            btn.classList.toggle('disliked');
+        }
+
+        async function handleShare(videoId) {
+            const shareData = {
+                title: 'Check out this short!',
+                url: `${window.location.origin}/shorts.html?id=${videoId}`
+            };
+            
+            try {
+                await fetch(`${CONFIG.apiEndpoint}/short/share`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': CONFIG.sessionId
+                    },
+                    body: JSON.stringify({ shortId: videoId })
+                });
+            } catch (error) {
+                console.error('Share tracking error:', error);
+            }
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        copyToClipboard(shareData.url);
+                    }
+                }
+            } else {
+                copyToClipboard(shareData.url);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(() => {
+                // Fallback
+                const input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert('Link copied to clipboard!');
+            });
+        }
+
+        // ==================== REPORT MODAL ====================
+        let currentReportId = null;
+
+        function openReport(videoId) {
+            currentReportId = videoId;
+            document.getElementById('report-overlay').classList.add('active');
+            document.getElementById('report-modal').classList.add('active');
+        }
+
+        function closeReport() {
+            document.getElementById('report-overlay').classList.remove('active');
+            document.getElementById('report-modal').classList.remove('active');
+            currentReportId = null;
+        }
+
+        document.getElementById('report-overlay').addEventListener('click', closeReport);
+        
+        document.querySelectorAll('.report-option').forEach(opt => {
+            opt.addEventListener('click', async (e) => {
+                const reason = opt.dataset.report;
+                if (reason === 'cancel') {
+                    closeReport();
+                    return;
+                }
+                
+                if (currentReportId) {
+                    try {
+                        await fetch(`${CONFIG.apiEndpoint}/report`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Session-Id': CONFIG.sessionId
+                            },
+                            body: JSON.stringify({
+                                videoId: currentReportId,
+                                videoType: 'short',
+                                reason: reason
+                            })
+                        });
+                        alert('Report submitted. Thank you!');
+                    } catch (error) {
+                        console.error('Report error:', error);
+                    }
+                }
+                closeReport();
+            });
+        });
+
+        // ==================== MUTE TOGGLE ====================
+        function toggleMute() {
+            isGlobalMuted = !isGlobalMuted;
+            document.querySelectorAll('video').forEach(v => v.muted = isGlobalMuted);
+            
+            const icon = document.getElementById('muteIcon');
+            icon.className = isGlobalMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+        }
+
+        // ==================== FOOTER ====================
+        function setupFooterToggle() {
+            let lastScrollY = window.scrollY;
+            const footer = document.getElementById('footer');
+            
+            window.addEventListener('scroll', () => {
+                const currentScrollY = window.scrollY;
+                
+                if (currentScrollY < lastScrollY && currentScrollY > 100) {
+                    footer.classList.add('visible');
+                } else {
+                    footer.classList.remove('visible');
+                }
+                
+                lastScrollY = currentScrollY;
+            });
+        }
+
+        function showFooter() {
+            document.getElementById('footer').classList.toggle('visible');
+        }
+
+        // ==================== UTILITIES ====================
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatNumber(num) {
+            if (!num || isNaN(num)) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // ==================== BEFORE UNLOAD ====================
+        window.addEventListener('beforeunload', () => {
+            // Send any pending view tracks
+            sendBatchViewTracking();
+        });
+
+        // Visibility change - send tracks when tab hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                sendBatchViewTracking();
+            }
+        });
+    </script>
+    
+    <!-- Placement Manager -->
+    <script src="placement-manager.js"></script>
+</body>
+</html>
