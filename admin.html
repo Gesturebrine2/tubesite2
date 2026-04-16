@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title id="pageTitle">Admin Dashboard - Xplitleaks</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #ff0050;
+            --secondary: #00f2ea;
+            --dark: #0a0a0a;
+            --darker: #050505;
+            --card: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #888888;
+            --border: #333333;
+            --success: #00d084;
+            --warning: #ffab00;
+            --danger: #ff0050;
+            --info: #00b4d8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--darker);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ==================== AUTH SCREEN ==================== */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--darker);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .auth-screen.hidden {
+            display: none;
+        }
+
+        .auth-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .auth-logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            animation: gradient 3s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .auth-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .auth-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--dark);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 0, 80, 0.1);
+        }
+
+        .auth-form .btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-form .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 0, 80, 0.4);
+        }
+
+        .auth-form .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-error {
+            background: rgba(255, 0, 80, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* ==================== HEADER ==================== */
+        .header {
+            background: var(--dark);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--card);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .api-status.connected {
+            color: var(--success);
+        }
+
+        .api-status.disconnected {
+            color: var(--danger);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover, .nav-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-logout {
+            padding: 0.5rem 1rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        /* ==================== CONTAINER ==================== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== CARDS ==================== */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--secondary);
+        }
+
+        /* ==================== STATS GRID ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--card), var(--dark));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 242, 234, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ==================== CHARTS ==================== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* ==================== FORMS ==================== */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="password"],
+        input[type="color"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--dark);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 0, 80, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 0, 80, 0.4);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ==================== URL LIST INPUT ==================== */
+        .url-list-container {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .url-item {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .url-item input {
+            flex: 1;
+        }
+
+        .url-item button {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-url-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        /* ==================== VIDEO GRID ==================== */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .video-card {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(255, 0, 80, 0.2);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: var(--card);
+        }
+
+        .video-info {
+            padding: 1rem;
+        }
+
+        .video-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-meta {
+            display: flex;
+            gap: 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* ==================== CREATOR MANAGEMENT ==================== */
+        .creator-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .creator-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .creator-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .creator-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .creator-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: var(--warning);
+            color: var(--dark);
+        }
+
+        .status-approved {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-rejected {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* ==================== MODERATION ==================== */
+        .moderation-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: var(--dark);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ==================== ALERTS ==================== */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert.show {
+            display: flex;
+        }
+
+        .alert-success {
+            background: rgba(0, 208, 132, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(255, 0, 80, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            padding: 1rem 1.5rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 300px;
+            animation: slideInRight 0.3s;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .creator-item {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .toast-container {
+                right: 10px;
+                left: 10px;
+            }
+
+            .toast {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- ==================== AUTH SCREEN ==================== -->
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <i class="fas fa-shield-alt"></i> Admin
+            </div>
+            <p class="auth-subtitle">Xplitleaks Dashboard</p>
+            
+            <div class="auth-error" id="authError"></div>
+            
+            <form class="auth-form" id="authForm">
+                <div class="form-group">
+                    <label for="adminToken">Admin Token</label>
+                    <input type="password" id="adminToken" required placeholder="Enter your admin token">
+                </div>
+                
+                <div class="form-group">
+                    <label for="apiEndpoint">API Endpoint</label>
+                    <input type="url" id="apiEndpoint" required placeholder="https://your-api.workers.dev/api">
+                </div>
+
+                <button type="submit" class="btn" id="authBtn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span id="siteName">Xplitleaks Admin</span>
+            </div>
+            
+            <div class="header-right">
+                <div class="api-status" id="apiStatus">
+                    <i class="fas fa-circle"></i>
+                    <span>Checking...</span>
+                </div>
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </button>
+                <button class="nav-tab" data-section="config">
+                    <i class="fas fa-cog"></i> Site Config
+                </button>
+                <button class="nav-tab" data-section="creators">
+                    <i class="fas fa-users"></i> Creators
+                </button>
+                <button class="nav-tab" data-section="videos">
+                    <i class="fas fa-video"></i> Videos
+                </button>
+                <button class="nav-tab" data-section="shorts">
+                    <i class="fas fa-mobile-alt"></i> Shorts
+                </button>
+                <button class="nav-tab" data-section="moderation">
+                    <i class="fas fa-gavel"></i> Moderation
+                </button>
+            </nav>
+        </header>
+
+        <div class="container">
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- ==================== DASHBOARD SECTION ==================== -->
+            <section id="dashboard" class="section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalVideos">0</div>
+                        <div class="stat-label">Total Videos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalShorts">0</div>
+                        <div class="stat-label">Total Shorts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalCreators">0</div>
+                        <div class="stat-label">Creators</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="pendingCreators">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalViews">0</div>
+                        <div class="stat-label">Total Views</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalReports">0</div>
+                        <div class="stat-label">Reports</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="card">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-area"></i>
+                            Daily Views
+                        </h2>
+                        <div class="chart-container">
+                            <canvas id="viewsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Content Distribution
+                        </h2>
+                        <div class="chart-container">
+                            <canvas id="contentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-clock"></i>
+                        Recent Activity
+                    </h2>
+                    <div id="recentActivity">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== CONFIG SECTION ==================== -->
+            <section id="config" class="section">
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-cog"></i>
+                        Site Configuration
+                    </h2>
+                    
+                    <form id="configForm">
+                        <div class="form-group">
+                            <label>Site Name</label>
+                            <input type="text" id="configSiteName" placeholder="Xplitleaks">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Site Logo URL (SVG or Image)</label>
+                            <input type="url" id="configSiteLogo" placeholder="https://example.com/logo.svg">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Primary Color</label>
+                            <input type="color" id="configPrimaryColor" value="#ff0050">
+                        </div>
+
+                        <div class="form-group">
+                            <label>VAST Ad Tag URL</label>
+                            <input type="url" id="configVastUrl" placeholder="https://ads.example.com/vast.xml">
+                            <small class="text-muted">Used for video player ads</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Placement Redirect URLs</label>
+                            <div class="url-list-container" id="placementUrls">
+                                <div class="url-item">
+                                    <input type="url" placeholder="https://example.com/redirect1" class="placement-url">
+                                    <button type="button" onclick="removeUrlItem(this)"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-url-btn" onclick="addUrlItem('placementUrls')">
+                                <i class="fas fa-plus"></i> Add URL
+                            </button>
+                            <small class="text-muted">These URLs rotate for the "Placement" feature</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Outstream Ad Tags (ExoClick, etc.)</label>
+                            <div class="url-list-container" id="outstreamUrls">
+                                <div class="url-item">
+                                    <input type="url" placeholder="https://syndication.exoclick.com/..." class="outstream-url">
+                                    <button type="button" onclick="removeUrlItem(this)"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-url-btn" onclick="addUrlItem('outstreamUrls')">
+                                <i class="fas fa-plus"></i> Add URL
+                            </button>
+                            <small class="text-muted">Outstream ads appear between shorts</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-save"></i> Save Configuration
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ==================== CREATORS SECTION ==================== -->
+            <section id="creators" class="section">
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-users"></i>
+                        Creator Management
+                    </h2>
+
+                    <div class="moderation-filters">
+                        <button class="filter-btn active" onclick="filterCreators('all')">All</button>
+                        <button class="filter-btn" onclick="filterCreators('pending')">Pending</button>
+                        <button class="filter-btn" onclick="filterCreators('approved')">Approved</button>
+                        <button class="filter-btn" onclick="filterCreators('rejected')">Rejected</button>
+                    </div>
+
+                    <div id="creatorsList" class="creator-list">
+                        <p class="text-muted">Loading creators...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== VIDEOS SECTION ==================== -->
+            <section id="videos" class="section">
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-video"></i>
+                        Video Management
+                    </h2>
+
+                    <div class="form-group">
+                        <input type="text" id="videoSearch" placeholder="Search videos..." 
+                               class="form-control" style="max-width: 400px;"
+                               onkeyup="searchVideos(this.value)">
+                    </div>
+
+                    <div id="videosList" class="video-grid">
+                        <p class="text-muted">Loading videos...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SHORTS SECTION ==================== -->
+            <section id="shorts" class="section">
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-mobile-alt"></i>
+                        Shorts Management
+                    </h2>
+
+                    <div class="form-group">
+                        <input type="text" id="shortSearch" placeholder="Search shorts..." 
+                               class="form-control" style="max-width: 400px;"
+                               onkeyup="searchShorts(this.value)">
+                    </div>
+
+                    <div id="shortsList" class="video-grid">
+                        <p class="text-muted">Loading shorts...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== MODERATION SECTION ==================== -->
+            <section id="moderation" class="section">
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-gavel"></i>
+                        Content Moderation
+                    </h2>
+
+                    <div class="moderation-filters">
+                        <button class="filter-btn active" onclick="filterModeration('all')">All Reports</button>
+                        <button class="filter-btn" onclick="filterModeration('pending')">Pending</button>
+                        <button class="filter-btn" onclick="filterModeration('resolved')">Resolved</button>
+                    </div>
+
+                    <div id="moderationList">
+                        <p class="text-muted">Loading reports...</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        let CONFIG = {
+            apiEndpoint: localStorage.getItem('apiEndpoint') || '',
+            adminToken: localStorage.getItem('adminToken') || ''
+        };
+
+        let charts = {};
+        let currentSection = 'dashboard';
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            setupNavigation();
+        });
+
+        function checkAuth() {
+            if (CONFIG.apiEndpoint && CONFIG.adminToken) {
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                loadSiteConfig();
+                checkAPIConnection();
+            } else {
+                // Pre-fill from localStorage if exists
+                document.getElementById('apiEndpoint').value = CONFIG.apiEndpoint;
+            }
+        }
+
+        // ==================== AUTHENTICATION ====================
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = document.getElementById('adminToken').value.trim();
+            const endpoint = document.getElementById('apiEndpoint').value.trim();
+            
+            if (!token || !endpoint) {
+                showAuthError('Please enter both token and endpoint');
+                return;
+            }
+
+            const btn = document.getElementById('authBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+            try {
+                const response = await fetch(`${endpoint}/admin/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Authentication failed');
+
+                CONFIG.apiEndpoint = endpoint;
+                CONFIG.adminToken = token;
+                localStorage.setItem('apiEndpoint', endpoint);
+                localStorage.setItem('adminToken', token);
+
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                showToast('Login successful!', 'success');
+                checkAPIConnection();
+
+            } catch (error) {
+                showAuthError('Invalid credentials or endpoint: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            }
+        });
+
+        function showAuthError(message) {
+            const errorEl = document.getElementById('authError');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('apiEndpoint');
+            localStorage.removeItem('adminToken');
+            CONFIG.apiEndpoint = '';
+            CONFIG.adminToken = '';
+            location.reload();
+        }
+
+        // ==================== API CONNECTION ====================
+        async function checkAPIConnection() {
+            const statusEl = document.getElementById('apiStatus');
+            
+            if (!CONFIG.apiEndpoint || !CONFIG.adminToken) {
+                statusEl.className = 'api-status disconnected';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>Not configured</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/admin/stats`, {
+                    headers: { 'Authorization': `Bearer ${CONFIG.adminToken}` }
+                });
+
+                if (response.ok) {
+                    statusEl.className = 'api-status connected';
+                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> <span>Connected</span>';
+                    loadDashboard();
+                } else {
+                    throw new Error('Auth failed');
+                }
+            } catch (error) {
+                statusEl.className = 'api-status disconnected';
+                statusEl.innerHTML = '<i class="fas fa-times-circle"></i> <span>Disconnected</span>';
+            }
+        }
+
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${CONFIG.adminToken}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (body) options.body = JSON.stringify(body);
+
+            const response = await fetch(`${CONFIG.apiEndpoint}${endpoint}`, options);
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ error: 'Request failed' }));
+                throw new Error(error.error || `HTTP ${response.status}`);
+            }
+
+            return response.json();
+        }
+
+        // ==================== NAVIGATION ====================
+        function setupNavigation() {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const section = tab.dataset.section;
+                    
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(section).classList.add('active');
+                    
+                    currentSection = section;
+                    
+                    if (section === 'dashboard') loadDashboard();
+                    if (section === 'creators') loadCreators();
+                    if (section === 'videos') loadVideos();
+                    if (section === 'shorts') loadShorts();
+                    if (section === 'config') loadConfig();
+                });
+            });
+        }
+
+        // ==================== DASHBOARD ====================
+        async function loadDashboard() {
+            try {
+                const data = await apiCall('/admin/stats');
+                
+                document.getElementById('totalVideos').textContent = data.overview.totalVideos || 0;
+                document.getElementById('totalShorts').textContent = data.overview.totalShorts || 0;
+                document.getElementById('totalCreators').textContent = data.overview.totalCreators || 0;
+                document.getElementById('pendingCreators').textContent = data.overview.pendingCreators || 0;
+                document.getElementById('totalViews').textContent = formatNumber(data.overview.totalViews || 0);
+                document.getElementById('totalReports').textContent = '0'; // Will be implemented
+
+                renderCharts(data);
+                loadRecentActivity();
+
+            } catch (error) {
+                showToast('Failed to load dashboard', 'error');
+            }
+        }
+
+        function renderCharts(data) {
+            // Views Chart
+            const ctx1 = document.getElementById('viewsChart').getContext('2d');
+            
+            if (charts.views) charts.views.destroy();
+            
+            const dailyStats = data.dailyStats || [];
+            
+            charts.views = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: dailyStats.map(d => d.date),
+                    datasets: [{
+                        label: 'Uploads',
+                        data: dailyStats.map(d => d.count),
+                        borderColor: '#ff0050',
+                        backgroundColor: 'rgba(255,0,80,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Views',
+                        data: dailyStats.map(d => d.views || 0),
+                        borderColor: '#00f2ea',
+                        backgroundColor: 'rgba(0,242,234,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#888' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#888' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#888' }
+                        }
+                    }
+                }
+            });
+
+            // Content Distribution
+            const ctx2 = document.getElementById('contentChart').getContext('2d');
+            
+            if (charts.content) charts.content.destroy();
+            
+            charts.content = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Videos', 'Shorts'],
+                    datasets: [{
+                        data: [data.overview.totalVideos, data.overview.totalShorts],
+                        backgroundColor: ['#ff0050', '#00f2ea']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#888' }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadRecentActivity() {
+            // This would fetch recent uploads, reports, etc.
+            document.getElementById('recentActivity').innerHTML = `
+                <div class="text-muted">
+                    <p><i class="fas fa-info-circle"></i> Recent activity tracking coming soon</p>
+                </div>
+            `;
+        }
+
+        // ==================== SITE CONFIG ====================
+        async function loadConfig() {
+            try {
+                const config = await apiCall('/config');
+                
+                document.getElementById('configSiteName').value = config.siteName || '';
+                document.getElementById('configSiteLogo').value = config.siteLogo || '';
+                document.getElementById('configPrimaryColor').value = config.primaryColor || '#ff0050';
+                document.getElementById('configVastUrl').value = config.vastTagUrl || '';
+                
+                // Load URL lists
+                if (config.placementUrls) {
+                    loadUrlList('placementUrls', JSON.parse(config.placementUrls));
+                }
+                if (config.outstreamAdTags) {
+                    loadUrlList('outstreamUrls', JSON.parse(config.outstreamAdTags));
+                }
+                
+            } catch (error) {
+                showToast('Failed to load config', 'error');
+            }
+        }
+
+        function loadUrlList(containerId, urls) {
+            const container = document.getElementById(containerId);
+            const firstItem = container.querySelector('.url-item');
+            container.innerHTML = '';
+            
+            if (urls.length === 0) {
+                container.appendChild(firstItem);
+                return;
+            }
+            
+            urls.forEach(url => {
+                const div = document.createElement('div');
+                div.className = 'url-item';
+                div.innerHTML = `
+                    <input type="url" value="${escapeHtml(url)}" class="${containerId === 'placementUrls' ? 'placement-url' : 'outstream-url'}">
+                    <button type="button" onclick="removeUrlItem(this)"><i class="fas fa-trash"></i></button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addUrlItem(containerId) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'url-item';
+            div.innerHTML = `
+                <input type="url" placeholder="Enter URL" class="${containerId === 'placementUrls' ? 'placement-url' : 'outstream-url'}">
+                <button type="button" onclick="removeUrlItem(this)"><i class="fas fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeUrlItem(btn) {
+            const item = btn.closest('.url-item');
+            const container = item.parentElement;
+            if (container.querySelectorAll('.url-item').length > 1) {
+                item.remove();
+            } else {
+                item.querySelector('input').value = '';
+            }
+        }
+
+        document.getElementById('configForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const placementUrls = Array.from(document.querySelectorAll('.placement-url'))
+                .map(i => i.value.trim()).filter(v => v);
+            const outstreamUrls = Array.from(document.querySelectorAll('.outstream-url'))
+                .map(i => i.value.trim()).filter(v => v);
+            
+            const config = {
+                siteName: document.getElementById('configSiteName').value,
+                siteLogo: document.getElementById('configSiteLogo').value,
+                primaryColor: document.getElementById('configPrimaryColor').value,
+                vastTagUrl: document.getElementById('configVastUrl').value,
+                placementUrls,
+                outstreamAdTags: outstreamUrls
+            };
+            
+            try {
+                await apiCall('/admin/config', 'PUT', config);
+                showToast('Configuration saved!', 'success');
+            } catch (error) {
+                showToast('Failed to save config', 'error');
+            }
+        });
+
+        // ==================== CREATORS ====================
+        let allCreators = [];
+
+        async function loadCreators() {
+            try {
+                const data = await apiCall('/admin/creators');
+                allCreators = data || [];
+                renderCreators(allCreators);
+            } catch (error) {
+                showToast('Failed to load creators', 'error');
+            }
+        }
+
+        function filterCreators(status) {
+            document.querySelectorAll('#creators .filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (status === 'all') {
+                renderCreators(allCreators);
+            } else {
+                renderCreators(allCreators.filter(c => c.status === status));
+            }
+        }
+
+        function renderCreators(creators) {
+            const container = document.getElementById('creatorsList');
+            
+            if (creators.length === 0) {
+                container.innerHTML = '<p class="text-muted">No creators found</p>';
+                return;
+            }
+            
+            container.innerHTML = creators.map(creator => `
+                <div class="creator-item">
+                    <div class="creator-info">
+                        <div class="creator-avatar">${creator.username.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div class="font-semibold">${escapeHtml(creator.username)}</div>
+                            <div class="text-sm text-muted">${escapeHtml(creator.email)}</div>
+                            <div class="text-xs text-muted mt-1">
+                                ${creator.videoCount || 0} videos • ${creator.shortCount || 0} shorts
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span class="creator-status status-${creator.status}">${creator.status}</span>
+                        ${creator.status === 'pending' ? `
+                            <button class="btn btn-success btn-sm" onclick="updateCreatorStatus('${creator.id}', 'approved')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="updateCreatorStatus('${creator.id}', 'rejected')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateCreatorStatus(creatorId, status) {
+            try {
+                await apiCall('/admin/creator/status', 'PUT', { creatorId, status });
+                showToast(`Creator ${status}`, 'success');
+                loadCreators();
+            } catch (error) {
+                showToast('Failed to update creator', 'error');
+            }
+        }
+
+        // ==================== VIDEOS ====================
+        let allVideos = [];
+
+        async function loadVideos() {
+            try {
+                const data = await apiCall('/videos?limit=100');
+                allVideos = data.videos || [];
+                renderVideos(allVideos);
+            } catch (error) {
+                showToast('Failed to load videos', 'error');
+            }
+        }
+
+        function searchVideos(query) {
+            const filtered = allVideos.filter(v => 
+                v.title.toLowerCase().includes(query.toLowerCase()) ||
+                (v.creatorName && v.creatorName.toLowerCase().includes(query.toLowerCase()))
+            );
+            renderVideos(filtered);
+        }
+
+        function renderVideos(videos) {
+            const container = document.getElementById('videosList');
+            
+            if (videos.length === 0) {
+                container.innerHTML = '<p class="text-muted">No videos found</p>';
+                return;
+            }
+            
+            container.innerHTML = videos.map(video => `
+                <div class="video-card">
+                    <img src="${video.thumbnail || ''}" alt="${escapeHtml(video.title)}" class="video-thumbnail"
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMTYwIj48cmVjdCBmaWxsPSIjMzMzIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE2MCIvPjx0ZXh0IGZpbGw9IiM4ODgiIHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm8gVGh1bWJuYWlsPC90ZXh0Pjwvc3ZnPg=='">
+                    <div class="video-info">
+                        <div class="video-title">${escapeHtml(video.title)}</div>
+                        <div class="video-meta">
+                            <span><i class="fas fa-eye"></i> ${formatNumber(video.views || 0)}</span>
+                            <span><i class="fas fa-user"></i> ${escapeHtml(video.creatorName || 'Unknown')}</span>
+                        </div>
+                        <div class="video-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="editVideo('${video.numericId || video.id}')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteVideo('${video.numericId || video.id}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteVideo(id) {
+            if (!confirm('Are you sure you want to delete this video?')) return;
+            
+            try {
+                await apiCall('/admin/video/delete', 'DELETE', { id });
+                showToast('Video deleted', 'success');
+                loadVideos();
+            } catch (error) {
+                showToast('Failed to delete video', 'error');
+            }
+        }
+
+        function editVideo(id) {
+            // Implement edit modal
+            showToast('Edit feature coming soon', 'info');
+        }
+
+        // ==================== SHORTS ====================
+        let allShorts = [];
+
+        async function loadShorts() {
+            try {
+                const data = await apiCall('/shorts?limit=100');
+                allShorts = data.shorts || [];
+                renderShorts(allShorts);
+            } catch (error) {
+                showToast('Failed to load shorts', 'error');
+            }
+        }
+
+        function searchShorts(query) {
+            const filtered = allShorts.filter(s => 
+                s.title.toLowerCase().includes(query.toLowerCase())
+            );
+            renderShorts(filtered);
+        }
+
+        function renderShorts(shorts) {
+            const container = document.getElementById('shortsList');
+            
+            if (shorts.length === 0) {
+                container.innerHTML = '<p class="text-muted">No shorts found</p>';
+                return;
+            }
+            
+            container.innerHTML = shorts.map(short => `
+                <div class="video-card">
+                    <img src="${short.thumbnail || ''}" alt="${escapeHtml(short.title)}" class="video-thumbnail"
+                         style="aspect-ratio: 9/16; height: 200px;"
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMzIwIj48cmVjdCBmaWxsPSIjMzMzIiB3aWR0aD0iMTgwIiBoZWlnaHQ9IjMyMCIvPjx0ZXh0IGZpbGw9IiM4ODgiIHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm8gVGh1bWJuYWlsPC90ZXh0Pjwvc3ZnPg=='">
+                    <div class="video-info">
+                        <div class="video-title">${escapeHtml(short.title)}</div>
+                        <div class="video-meta">
+                            <span><i class="fas fa-eye"></i> ${formatNumber(short.views || 0)}</span>
+                            <span><i class="fas fa-heart"></i> ${formatNumber(short.likes || 0)}</span>
+                        </div>
+                        <div class="video-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="editShort('${short.numericId || short.id}')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteShort('${short.numericId || short.id}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteShort(id) {
+            if (!confirm('Are you sure you want to delete this short?')) return;
+            
+            try {
+                await apiCall('/admin/short/delete', 'DELETE', { id });
+                showToast('Short deleted', 'success');
+                loadShorts();
+            } catch (error) {
+                showToast('Failed to delete short', 'error');
+            }
+        }
+
+        function editShort(id) {
+            showToast('Edit feature coming soon', 'info');
+        }
+
+        // ==================== MODERATION ====================
+        function filterModeration(filter) {
+            document.querySelectorAll('#moderation .filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Implement moderation filtering
+            document.getElementById('moderationList').innerHTML = `
+                <p class="text-muted">Moderation system coming soon</p>
+            `;
+        }
+
+        // ==================== UTILITIES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatNumber(num) {
+            if (!num || isNaN(num)) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+    </script>
+</body>
+</html>
