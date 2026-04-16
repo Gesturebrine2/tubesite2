@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Creator Studio - Xplitleaks</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for Stats -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #ff0050;
+            --primary-hover: #ff3370;
+            --bg-body: #0a0a0a;
+            --bg-card: #1a1a1a;
+            --border: #333333;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Logo Animation */
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), #00f2ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Auth Screen */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-body);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255,0,80,0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Main App */
+        .app-container {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-container.active {
+            display: block;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #00f2ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            border-color: var(--primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(255,0,80,0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(255,0,80,0.1);
+        }
+
+        /* Progress */
+        .progress-container {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #00f2ea);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Video Grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .video-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .video-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .video-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            background: #222;
+        }
+
+        .video-info {
+            padding: 1rem;
+        }
+
+        .video-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-meta {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Type Selector */
+        .type-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .type-option {
+            flex: 1;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .type-option:hover, .type-option.active {
+            border-color: var(--primary);
+            background: rgba(255,0,80,0.1);
+        }
+
+        .type-option i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+            min-width: 280px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== AUTH SCREEN ==================== -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-card">
+            <div class="logo mb-4" id="authLogo">Xplitleaks</div>
+            <p class="text-muted mb-6">Creator Studio</p>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label>Email or Username</label>
+                    <input type="text" id="loginEmail" class="form-control" placeholder="Enter email or username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form hidden">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="signupUsername" class="form-control" placeholder="Choose a username" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" class="form-control" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" class="form-control" placeholder="Create a password" required>
+                </div>
+                <button type="submit" class="btn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                <p class="text-muted text-sm mt-4">
+                    <i class="fas fa-info-circle"></i> Your account will need admin approval before you can upload.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="mainApp" class="app-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <a href="index.html" class="logo" id="appLogo">Xplitleaks</a>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div>
+                    <div id="userName" class="font-semibold">User</div>
+                    <div class="text-sm text-muted cursor-pointer hover:text-primary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <button class="tab-btn" onclick="switchTab('upload')">
+                <i class="fas fa-cloud-upload-alt"></i> Upload
+            </button>
+            <button class="tab-btn" onclick="switchTab('videos')">
+                <i class="fas fa-video"></i> My Videos
+            </button>
+            <button class="tab-btn" onclick="switchTab('shorts')">
+                <i class="fas fa-mobile-alt"></i> My Shorts
+            </button>
+        </div>
+
+        <!-- ==================== DASHBOARD SECTION ==================== -->
+        <section id="dashboard" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statVideos">0</div>
+                    <div class="stat-label">Videos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statShorts">0</div>
+                    <div class="stat-label">Shorts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statViews">0</div>
+                    <div class="stat-label">Total Views</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statLikes">0</div>
+                    <div class="stat-label">Likes</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-area text-primary"></i>
+                    Views Over Time
+                </h3>
+                <div class="chart-container">
+                    <canvas id="viewsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-pie text-primary"></i>
+                    Content Performance
+                </h3>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== UPLOAD SECTION ==================== -->
+        <section id="upload" class="tab-content hidden">
+            <div class="card">
+                <h3 class="card-title">
+                    <i class="fas fa-cloud-upload-alt text-primary"></i>
+                    Upload Content
+                </h3>
+
+                <div class="type-selector">
+                    <div class="type-option active" onclick="selectType('video')" id="typeVideo">
+                        <i class="fas fa-video"></i>
+                        <div>Video</div>
+                        <small class="text-muted">Long-form content</small>
+                    </div>
+                    <div class="type-option" onclick="selectType('short')" id="typeShort">
+                        <i class="fas fa-mobile-alt"></i>
+                        <div>Short</div>
+                        <small class="text-muted">Vertical short-form</small>
+                    </div>
+                </div>
+
+                <input type="hidden" id="contentType" value="video">
+
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="videoTitle" class="form-control" placeholder="Enter video title" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="videoCategory" class="form-control">
+                        <option value="amateur">Amateur</option>
+                        <option value="teen">Teen</option>
+                        <option value="mature">Mature</option>
+                        <option value="interracial">Interracial</option>
+                        <option value="anal">Anal</option>
+                        <option value="lesbian">Lesbian</option>
+                        <option value="homemade">Homemade</option>
+                        <option value="bbc">BBC</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Tags (comma separated)</label>
+                    <input type="text" id="videoTags" class="form-control" placeholder="tag1, tag2, tag3">
+                </div>
+
+                <div class="form-group" id="descriptionGroup">
+                    <label>Description</label>
+                    <textarea id="videoDescription" class="form-control" rows="3" placeholder="Video description..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Video File *</label>
+                    <div class="upload-area" id="videoUploadArea" onclick="document.getElementById('videoFile').click()">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-muted mb-3"></i>
+                        <p class="text-muted">Click or drag video file here</p>
+                        <p class="text-sm text-muted mt-1">MP4, MKV, WebM (Max 2GB)</p>
+                        <input type="file" id="videoFile" class="hidden" accept="video/*" required>
+                    </div>
+                    <div class="progress-container" id="videoProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="videoProgressFill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="videoProgressText">0%</span>
+                            <span id="videoProgressStatus">Uploading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Thumbnail (optional)</label>
+                    <div class="upload-area" id="thumbUploadArea" onclick="document.getElementById('thumbFile').click()">
+                        <i class="fas fa-image text-4xl text-muted mb-3"></i>
+                        <p class="text-muted">Click or drag thumbnail</p>
+                        <p class="text-sm text-muted mt-1">JPG, PNG, WebP</p>
+                        <input type="file" id="thumbFile" class="hidden" accept="image/*">
+                    </div>
+                    <div class="progress-container" id="thumbProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="thumbProgressFill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="thumbProgressText">0%</span>
+                            <span id="thumbProgressStatus">Uploading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn" id="uploadBtn" onclick="startUpload()">
+                    <i class="fas fa-upload"></i> Upload Content
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== VIDEOS SECTION ==================== -->
+        <section id="videos" class="tab-content hidden">
+            <div class="card">
+                <h3 class="card-title">
+                    <i class="fas fa-video text-primary"></i>
+                    My Videos
+                </h3>
+                <div id="videosGrid" class="video-grid">
+                    <p class="text-muted text-center py-8">Loading...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SHORTS SECTION ==================== -->
+        <section id="shorts" class="tab-content hidden">
+            <div class="card">
+                <h3 class="card-title">
+                    <i class="fas fa-mobile-alt text-primary"></i>
+                    My Shorts
+                </h3>
+                <div id="shortsGrid" class="video-grid">
+                    <p class="text-muted text-center py-8">Loading...</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                <a href="index.html" class="hover:text-primary transition-colors">Home</a>
+                <a href="index.html?category=trending" class="hover:text-primary transition-colors">Trending</a>
+                <a href="upload.html" class="hover:text-primary transition-colors">Upload</a>
+                <a href="#" class="hover:text-primary transition-colors">Support</a>
+            </div>
+            <p class="text-xs">&copy; 2024 <span id="footerSiteName">Xplitleaks</span>. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        const CONFIG = {
+            apiEndpoint: 'https://xplitleaks-api.dylancoral.workers.dev/api',
+            sessionId: localStorage.getItem('sessionId') || generateSessionId()
+        };
+        localStorage.setItem('sessionId', CONFIG.sessionId);
+
+        let currentUser = null;
+        let siteConfig = {};
+        let viewsChart = null;
+        let performanceChart = null;
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSiteConfig();
+            checkAuth();
+            setupDragDrop();
+        });
+
+        function generateSessionId() {
+            return 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        }
+
+        // ==================== SITE CONFIG ====================
+        async function loadSiteConfig() {
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/config`);
+                siteConfig = await response.json();
+                
+                if (siteConfig.siteName) {
+                    document.getElementById('authLogo').textContent = siteConfig.siteName;
+                    document.getElementById('appLogo').textContent = siteConfig.siteName;
+                    document.getElementById('pageTitle').textContent = `Creator Studio - ${siteConfig.siteName}`;
+                    document.getElementById('footerSiteName').textContent = siteConfig.siteName;
+                }
+                
+                if (siteConfig.primaryColor) {
+                    document.documentElement.style.setProperty('--primary', siteConfig.primaryColor);
+                }
+            } catch (error) {
+                console.error('Failed to load site config:', error);
+            }
+        }
+
+        // ==================== AUTHENTICATION ====================
+        function checkAuth() {
+            const token = localStorage.getItem('creatorToken');
+            if (token) {
+                verifyToken(token);
+            }
+        }
+
+        async function verifyToken(token) {
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/creator/profile`, {
+                    headers: {
+                        'X-Creator-Token': token
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    currentUser = user;
+                    showApp();
+                } else {
+                    localStorage.removeItem('creatorToken');
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+            }
+        }
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('signupForm').classList.add('hidden');
+            } else {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('signupForm').classList.remove('hidden');
+            }
+        }
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/creator/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('creatorToken', data.token);
+                    currentUser = data;
+                    showApp();
+                    showToast('Welcome back!', 'success');
+                } else {
+                    showToast(data.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showToast('Network error', 'error');
+            }
+        });
+
+        // Signup
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('signupUsername').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/creator/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showToast('Account created! Waiting for admin approval.', 'success');
+                    switchAuthTab('login');
+                    document.querySelector('.auth-tab').click();
+                } else {
+                    showToast(data.error || 'Signup failed', 'error');
+                }
+            } catch (error) {
+                showToast('Network error', 'error');
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('creatorToken');
+            currentUser = null;
+            location.reload();
+        }
+
+        function showApp() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.add('active');
+            
+            // Update user info
+            document.getElementById('userName').textContent = currentUser.username;
+            document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+            
+            // Load dashboard data
+            loadDashboard();
+        }
+
+        // ==================== TABS ====================
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            event.target.closest('.tab-btn').classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(tab).classList.remove('hidden');
+            
+            if (tab === 'dashboard') loadDashboard();
+            if (tab === 'videos') loadMyVideos();
+            if (tab === 'shorts') loadMyShorts();
+        }
+
+        // ==================== DASHBOARD ====================
+        async function loadDashboard() {
+            if (!currentUser) return;
+            
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/creator/content`, {
+                    headers: {
+                        'X-Creator-Token': localStorage.getItem('creatorToken')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                // Calculate stats
+                const videos = data.videos || [];
+                const shorts = data.shorts || [];
+                
+                let totalViews = 0;
+                let totalLikes = 0;
+                
+                videos.forEach(v => {
+                    totalViews += v.views || 0;
+                });
+                
+                shorts.forEach(s => {
+                    totalViews += s.views || 0;
+                    totalLikes += s.likes || 0;
+                });
+                
+                // Update stats display
+                document.getElementById('statVideos').textContent = videos.length;
+                document.getElementById('statShorts').textContent = shorts.length;
+                document.getElementById('statViews').textContent = formatNumber(totalViews);
+                document.getElementById('statLikes').textContent = formatNumber(totalLikes);
+                
+                // Render charts
+                renderCharts(videos, shorts);
+                
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+
+        function renderCharts(videos, shorts) {
+            // Views over time chart
+            const ctx1 = document.getElementById('viewsChart').getContext('2d');
+            
+            if (viewsChart) viewsChart.destroy();
+            
+            const allContent = [...videos, ...shorts].sort((a, b) => 
+                new Date(a.addedAt) - new Date(b.addedAt)
+            );
+            
+            const dates = allContent.map(c => new Date(c.addedAt).toLocaleDateString());
+            const views = allContent.map(c => c.views || 0);
+            
+            viewsChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Views',
+                        data: views,
+                        borderColor: '#ff0050',
+                        backgroundColor: 'rgba(255,0,80,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#888' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#888' }
+                        }
+                    }
+                }
+            });
+            
+            // Performance chart
+            const ctx2 = document.getElementById('performanceChart').getContext('2d');
+            
+            if (performanceChart) performanceChart.destroy();
+            
+            const videoViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
+            const shortViews = shorts.reduce((sum, s) => sum + (s.views || 0), 0);
+            
+            performanceChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Videos', 'Shorts'],
+                    datasets: [{
+                        data: [videoViews, shortViews],
+                        backgroundColor: ['#ff0050', '#00f2ea']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#888' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==================== UPLOAD ====================
+        function selectType(type) {
+            document.getElementById('contentType').value = type;
+            
+            document.querySelectorAll('.type-option').forEach(o => o.classList.remove('active'));
+            document.getElementById(type === 'video' ? 'typeVideo' : 'typeShort').classList.add('active');
+            
+            // Show/hide description for shorts
+            document.getElementById('descriptionGroup').style.display = type === 'video' ? 'block' : 'none';
+        }
+
+        function setupDragDrop() {
+            const areas = ['videoUploadArea', 'thumbUploadArea'];
+            
+            areas.forEach(areaId => {
+                const area = document.getElementById(areaId);
+                if (!area) return;
+                
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    area.classList.add('dragover');
+                });
+                
+                area.addEventListener('dragleave', () => {
+                    area.classList.remove('dragover');
+                });
+                
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    area.classList.remove('dragover');
+                    
+                    const input = area.querySelector('input[type="file"]');
+                    if (e.dataTransfer.files.length) {
+                        input.files = e.dataTransfer.files;
+                    }
+                });
+            });
+        }
+
+        async function startUpload() {
+            const token = localStorage.getItem('creatorToken');
+            if (!token) {
+                showToast('Please login first', 'error');
+                return;
+            }
+            
+            const type = document.getElementById('contentType').value;
+            const title = document.getElementById('videoTitle').value;
+            const category = document.getElementById('videoCategory').value;
+            const tags = document.getElementById('videoTags').value.split(',').map(t => t.trim()).filter(t => t);
+            const description = document.getElementById('videoDescription').value;
+            const videoFile = document.getElementById('videoFile').files[0];
+            const thumbFile = document.getElementById('thumbFile').files[0];
+            
+            if (!title || !videoFile) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('uploadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            
+            try {
+                // Step 1: Upload video to R2
+                showToast('Uploading video file...', 'info');
+                const videoProgress = document.getElementById('videoProgress');
+                videoProgress.classList.add('active');
+                
+                const videoUrl = await uploadFile(videoFile, type === 'short' ? 'Xplit_vids/shorts' : 'Xplit_vids', 
+                    (progress) => {
+                        document.getElementById('videoProgressFill').style.width = progress + '%';
+                        document.getElementById('videoProgressText').textContent = Math.round(progress) + '%';
+                    }
+                );
+                
+                document.getElementById('videoProgressStatus').textContent = 'Complete!';
+                
+                // Step 2: Upload thumbnail if provided
+                let thumbnailUrl = '';
+                if (thumbFile) {
+                    const thumbProgress = document.getElementById('thumbProgress');
+                    thumbProgress.classList.add('active');
+                    
+                    const thumbPath = type === 'short' ? 'Xplit_vids/shorts/thumbnails' : 'Xplit_vids/thumbnails';
+                    thumbnailUrl = await uploadFile(thumbFile, thumbPath,
+                        (progress) => {
+                            document.getElementById('thumbProgressFill').style.width = progress + '%';
+                            document.getElementById('thumbProgressText').textContent = Math.round(progress) + '%';
+                        }
+                    );
+                    
+                    document.getElementById('thumbProgressStatus').textContent = 'Complete!';
+                }
+                
+                // Step 3: Save metadata
+                showToast('Saving metadata...', 'info');
+                
+                const endpoint = type === 'short' ? '/creator/upload/short' : '/creator/upload/video';
+                const metadata = {
+                    title,
+                    videoUrl,
+                    thumbnail: thumbnailUrl,
+                    duration: '0:00', // Will be detected by player
+                    category,
+                    tags,
+                    description: type === 'video' ? description : undefined
+                };
+                
+                const response = await fetch(`${CONFIG.apiEndpoint}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Creator-Token': token
+                    },
+                    body: JSON.stringify(metadata)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showToast('Upload successful!', 'success');
+                    
+                    // Reset form
+                    document.getElementById('videoTitle').value = '';
+                    document.getElementById('videoTags').value = '';
+                    document.getElementById('videoDescription').value = '';
+                    document.getElementById('videoFile').value = '';
+                    document.getElementById('thumbFile').value = '';
+                    
+                    videoProgress.classList.remove('active');
+                    document.getElementById('thumbProgress').classList.remove('active');
+                    
+                    // Switch to videos tab
+                    switchTab(type === 'short' ? 'shorts' : 'videos');
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+                
+            } catch (error) {
+                showToast(error.message || 'Upload failed', 'error');
+                console.error('Upload error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-upload"></i> Upload Content';
+            }
+        }
+
+        function uploadFile(file, path, onProgress) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('path', path);
+                formData.append('filename', Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_'));
+                
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const progress = (e.loaded / e.total) * 100;
+                        onProgress(progress);
+                    }
+                });
+                
+                xhr.open('POST', `${CONFIG.apiEndpoint}/upload/file`);
+                xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('creatorToken')}`);
+                
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        resolve(response.url);
+                    } else {
+                        reject(new Error('Upload failed'));
+                    }
+                };
+                
+                xhr.onerror = () => reject(new Error('Network error'));
+                
+                xhr.send(formData);
+            });
+        }
+
+        // ==================== MY CONTENT ====================
+        async function loadMyVideos() {
+            await loadContent('videos', 'videosGrid');
+        }
+
+        async function loadMyShorts() {
+            await loadContent('shorts', 'shortsGrid');
+        }
+
+        async function loadContent(type, containerId) {
+            const token = localStorage.getItem('creatorToken');
+            if (!token) return;
+            
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<p class="text-muted text-center py-8">Loading...</p>';
+            
+            try {
+                const response = await fetch(`${CONFIG.apiEndpoint}/creator/content?type=${type}`, {
+                    headers: { 'X-Creator-Token': token }
+                });
+                
+                const data = await response.json();
+                const items = data[type] || [];
+                
+                if (items.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-muted">
+                            <i class="fas fa-video text-4xl mb-3"></i>
+                            <p>No ${type} yet. Upload your first!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = items.map(item => `
+                    <div class="video-card">
+                        <img src="${item.thumbnail || ''}" 
+                             alt="${escapeHtml(item.title)}" 
+                             class="video-thumbnail"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMTgwIj48cmVjdCBmaWxsPSIjMzMzIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIvPjx0ZXh0IGZpbGw9IiM4ODgiIHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm8gVGh1bWJuYWlsPC90ZXh0Pjwvc3ZnPg=='">
+                        <div class="video-info">
+                            <div class="video-title">${escapeHtml(item.title)}</div>
+                            <div class="video-meta">
+                                <span><i class="fas fa-eye"></i> ${formatNumber(item.views || 0)}</span>
+                                <span><i class="fas fa-heart"></i> ${formatNumber(item.likes || 0)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                container.innerHTML = '<p class="text-muted text-center py-8">Failed to load</p>';
+            }
+        }
+
+        // ==================== UTILITIES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle text-green-500' : type === 'error' ? 'fa-exclamation-circle text-red-500' : 'fa-info-circle text-primary'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatNumber(num) {
+            if (!num || isNaN(num)) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+    </script>
+</body>
+</html>
