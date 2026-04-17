@@ -1151,25 +1151,37 @@
         }
 
         async function apiCall(endpoint, method = 'GET', body = null) {
-            const options = {
-                method,
-                headers: {
-                    'Authorization': `Bearer ${CONFIG.adminToken}`,
-                    'Content-Type': 'application/json'
-                }
-            };
-
-            if (body) options.body = JSON.stringify(body);
-
-            const response = await fetch(`${CONFIG.apiEndpoint}${endpoint}`, options);
-            
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({ error: 'Request failed' }));
-                throw new Error(error.error || `HTTP ${response.status}`);
-            }
-
-            return response.json();
+    const options = {
+        method,
+        headers: {
+            'Authorization': `Bearer ${CONFIG.adminToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         }
+    };
+
+    if (body) options.body = JSON.stringify(body);
+
+    const response = await fetch(`${CONFIG.apiEndpoint}${endpoint}`, options);
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+            errorData = JSON.parse(errorText);
+        } catch (e) {
+            errorData = { error: errorText || `HTTP ${response.status}` };
+        }
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    // Handle empty responses
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        return response.json();
+    }
+    return { success: true };
+}
 
         // ==================== NAVIGATION ====================
         function setupNavigation() {
