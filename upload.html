@@ -761,570 +761,764 @@
     </footer>
 
     <script>
-        // ==================== CONFIGURATION ====================
-        const CONFIG = {
-            apiEndpoint: 'https://xplitleaks-api.dylancoral.workers.dev/api',
-            sessionId: localStorage.getItem('sessionId') || generateSessionId()
-        };
-        localStorage.setItem('sessionId', CONFIG.sessionId);
+        // ==================== FIXED UPLOAD CONFIGURATION ====================
+const CONFIG = {
+    apiEndpoint: 'https://xplitleaks-api.dylancoral.workers.dev/api',
+    sessionId: localStorage.getItem('sessionId') || generateSessionId()
+};
+localStorage.setItem('sessionId', CONFIG.sessionId);
 
-        let currentUser = null;
-        let siteConfig = {};
-        let viewsChart = null;
-        let performanceChart = null;
+let currentUser = null;
+let siteConfig = {};
+let viewsChart = null;
+let performanceChart = null;
 
-        // ==================== INITIALIZATION ====================
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadSiteConfig();
-            checkAuth();
-            setupDragDrop();
-        });
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadSiteConfig();
+    checkAuth();
+    setupDragDrop();
+    setupFileInputs(); // NEW: Setup file input listeners
+});
 
-        function generateSessionId() {
-            return 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+function generateSessionId() {
+    return 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+}
+
+// ==================== SITE CONFIG ====================
+async function loadSiteConfig() {
+    try {
+        const response = await fetch(`${CONFIG.apiEndpoint}/config`);
+        siteConfig = await response.json();
+        
+        if (siteConfig.siteName) {
+            document.getElementById('authLogo').textContent = siteConfig.siteName;
+            document.getElementById('appLogo').textContent = siteConfig.siteName;
+            document.getElementById('pageTitle').textContent = `Creator Studio - ${siteConfig.siteName}`;
+            document.getElementById('footerSiteName').textContent = siteConfig.siteName;
         }
-
-        // ==================== SITE CONFIG ====================
-        async function loadSiteConfig() {
-            try {
-                const response = await fetch(`${CONFIG.apiEndpoint}/config`);
-                siteConfig = await response.json();
-                
-                if (siteConfig.siteName) {
-                    document.getElementById('authLogo').textContent = siteConfig.siteName;
-                    document.getElementById('appLogo').textContent = siteConfig.siteName;
-                    document.getElementById('pageTitle').textContent = `Creator Studio - ${siteConfig.siteName}`;
-                    document.getElementById('footerSiteName').textContent = siteConfig.siteName;
-                }
-                
-                if (siteConfig.primaryColor) {
-                    document.documentElement.style.setProperty('--primary', siteConfig.primaryColor);
-                }
-            } catch (error) {
-                console.error('Failed to load site config:', error);
-            }
+        
+        if (siteConfig.primaryColor) {
+            document.documentElement.style.setProperty('--primary', siteConfig.primaryColor);
         }
+    } catch (error) {
+        console.error('Failed to load site config:', error);
+    }
+}
 
-        // ==================== AUTHENTICATION ====================
-        function checkAuth() {
-            const token = localStorage.getItem('creatorToken');
-            if (token) {
-                verifyToken(token);
-            }
-        }
+// ==================== AUTHENTICATION ====================
+function checkAuth() {
+    const token = localStorage.getItem('creatorToken');
+    if (token) {
+        verifyToken(token);
+    }
+}
 
-        async function verifyToken(token) {
-            try {
-                const response = await fetch(`${CONFIG.apiEndpoint}/creator/profile`, {
-                    headers: {
-                        'X-Creator-Token': token
-                    }
-                });
-                
-                if (response.ok) {
-                    const user = await response.json();
-                    currentUser = user;
-                    showApp();
-                } else {
-                    localStorage.removeItem('creatorToken');
-                }
-            } catch (error) {
-                console.error('Token verification failed:', error);
-            }
-        }
-
-        function switchAuthTab(tab) {
-            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if (tab === 'login') {
-                document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('signupForm').classList.add('hidden');
-            } else {
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('signupForm').classList.remove('hidden');
-            }
-        }
-
-        // Login
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            try {
-                const response = await fetch(`${CONFIG.apiEndpoint}/creator/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    localStorage.setItem('creatorToken', data.token);
-                    currentUser = data;
-                    showApp();
-                    showToast('Welcome back!', 'success');
-                } else {
-                    showToast(data.error || 'Login failed', 'error');
-                }
-            } catch (error) {
-                showToast('Network error', 'error');
+async function verifyToken(token) {
+    try {
+        const response = await fetch(`${CONFIG.apiEndpoint}/creator/profile`, {
+            headers: {
+                'X-Creator-Token': token
             }
         });
-
-        // Signup
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('signupUsername').value;
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            
-            try {
-                const response = await fetch(`${CONFIG.apiEndpoint}/creator/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showToast('Account created! Waiting for admin approval.', 'success');
-                    switchAuthTab('login');
-                    document.querySelector('.auth-tab').click();
-                } else {
-                    showToast(data.error || 'Signup failed', 'error');
-                }
-            } catch (error) {
-                showToast('Network error', 'error');
-            }
-        });
-
-        function logout() {
+        
+        if (response.ok) {
+            const user = await response.json();
+            currentUser = user;
+            showApp();
+        } else {
             localStorage.removeItem('creatorToken');
-            currentUser = null;
-            location.reload();
         }
+    } catch (error) {
+        console.error('Token verification failed:', error);
+    }
+}
 
-        function showApp() {
-            document.getElementById('authScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.add('active');
-            
-            // Update user info
-            document.getElementById('userName').textContent = currentUser.username;
-            document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
-            
-            // Load dashboard data
-            loadDashboard();
+function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    if (tab === 'login') {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('signupForm').classList.add('hidden');
+    } else {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('signupForm').classList.remove('hidden');
+    }
+}
+
+// Login
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    try {
+        const response = await fetch(`${CONFIG.apiEndpoint}/creator/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            localStorage.setItem('creatorToken', data.token);
+            currentUser = data;
+            showApp();
+            showToast('Welcome back!', 'success');
+        } else {
+            showToast(data.error || 'Login failed', 'error');
         }
+    } catch (error) {
+        showToast('Network error', 'error');
+    }
+});
 
-        // ==================== TABS ====================
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-            event.target.closest('.tab-btn').classList.add('active');
-            
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(tab).classList.remove('hidden');
-            
-            if (tab === 'dashboard') loadDashboard();
-            if (tab === 'videos') loadMyVideos();
-            if (tab === 'shorts') loadMyShorts();
+// Signup
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('signupUsername').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    
+    try {
+        const response = await fetch(`${CONFIG.apiEndpoint}/creator/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Account created! Waiting for admin approval.', 'success');
+            switchAuthTab('login');
+            document.querySelector('.auth-tab').click();
+        } else {
+            showToast(data.error || 'Signup failed', 'error');
         }
+    } catch (error) {
+        showToast('Network error', 'error');
+    }
+});
 
-        // ==================== DASHBOARD ====================
-        async function loadDashboard() {
-            if (!currentUser) return;
-            
-            try {
-                const response = await fetch(`${CONFIG.apiEndpoint}/creator/content`, {
-                    headers: {
-                        'X-Creator-Token': localStorage.getItem('creatorToken')
-                    }
-                });
-                
-                const data = await response.json();
-                
-                // Calculate stats
-                const videos = data.videos || [];
-                const shorts = data.shorts || [];
-                
-                let totalViews = 0;
-                let totalLikes = 0;
-                
-                videos.forEach(v => {
-                    totalViews += v.views || 0;
-                });
-                
-                shorts.forEach(s => {
-                    totalViews += s.views || 0;
-                    totalLikes += s.likes || 0;
-                });
-                
-                // Update stats display
-                document.getElementById('statVideos').textContent = videos.length;
-                document.getElementById('statShorts').textContent = shorts.length;
-                document.getElementById('statViews').textContent = formatNumber(totalViews);
-                document.getElementById('statLikes').textContent = formatNumber(totalLikes);
-                
-                // Render charts
-                renderCharts(videos, shorts);
-                
-            } catch (error) {
-                console.error('Failed to load dashboard:', error);
+function logout() {
+    localStorage.removeItem('creatorToken');
+    currentUser = null;
+    location.reload();
+}
+
+function showApp() {
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.add('active');
+    
+    document.getElementById('userName').textContent = currentUser.username;
+    document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+    
+    loadDashboard();
+}
+
+// ==================== TABS ====================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    event.target.closest('.tab-btn').classList.add('active');
+    
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById(tab).classList.remove('hidden');
+    
+    if (tab === 'dashboard') loadDashboard();
+    if (tab === 'videos') loadMyVideos();
+    if (tab === 'shorts') loadMyShorts();
+}
+
+// ==================== DASHBOARD ====================
+async function loadDashboard() {
+    if (!currentUser) return;
+    
+    try {
+        const response = await fetch(`${CONFIG.apiEndpoint}/creator/content`, {
+            headers: {
+                'X-Creator-Token': localStorage.getItem('creatorToken')
+            }
+        });
+        
+        const data = await response.json();
+        
+        const videos = data.videos || [];
+        const shorts = data.shorts || [];
+        
+        let totalViews = 0;
+        let totalLikes = 0;
+        
+        videos.forEach(v => {
+            totalViews += (v.displayViews || v.views || 0);
+        });
+        
+        shorts.forEach(s => {
+            totalViews += (s.displayViews || s.views || 0);
+            totalLikes += (s.likes || 0);
+        });
+        
+        document.getElementById('statVideos').textContent = videos.length;
+        document.getElementById('statShorts').textContent = shorts.length;
+        document.getElementById('statViews').textContent = formatNumber(totalViews);
+        document.getElementById('statLikes').textContent = formatNumber(totalLikes);
+        
+        renderCharts(videos, shorts);
+        
+    } catch (error) {
+        console.error('Failed to load dashboard:', error);
+    }
+}
+
+function renderCharts(videos, shorts) {
+    const ctx1 = document.getElementById('viewsChart').getContext('2d');
+    
+    if (viewsChart) viewsChart.destroy();
+    
+    const allContent = [...videos, ...shorts].sort((a, b) => 
+        new Date(a.addedAt) - new Date(b.addedAt)
+    );
+    
+    const dates = allContent.map(c => new Date(c.addedAt).toLocaleDateString());
+    const views = allContent.map(c => c.displayViews || c.views || 0);
+    
+    viewsChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Views',
+                data: views,
+                borderColor: '#ff0050',
+                backgroundColor: 'rgba(255,0,80,0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    ticks: { color: '#888' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#888' }
+                }
             }
         }
+    });
+    
+    const ctx2 = document.getElementById('performanceChart').getContext('2d');
+    
+    if (performanceChart) performanceChart.destroy();
+    
+    const videoViews = videos.reduce((sum, v) => sum + (v.displayViews || v.views || 0), 0);
+    const shortViews = shorts.reduce((sum, s) => sum + (s.displayViews || s.views || 0), 0);
+    
+    performanceChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['Videos', 'Shorts'],
+            datasets: [{
+                data: [videoViews, shortViews],
+                backgroundColor: ['#ff0050', '#00f2ea']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#888' }
+                }
+            }
+        }
+    });
+}
 
-        function renderCharts(videos, shorts) {
-            // Views over time chart
-            const ctx1 = document.getElementById('viewsChart').getContext('2d');
+// ==================== UPLOAD - FIXED ====================
+function selectType(type) {
+    document.getElementById('contentType').value = type;
+    
+    document.querySelectorAll('.type-option').forEach(o => o.classList.remove('active'));
+    document.getElementById(type === 'video' ? 'typeVideo' : 'typeShort').classList.add('active');
+    
+    document.getElementById('descriptionGroup').style.display = type === 'video' ? 'block' : 'none';
+}
+
+function setupDragDrop() {
+    const areas = ['videoUploadArea', 'thumbUploadArea'];
+    
+    areas.forEach(areaId => {
+        const area = document.getElementById(areaId);
+        if (!area) return;
+        
+        area.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            area.classList.add('dragover');
+        });
+        
+        area.addEventListener('dragleave', () => {
+            area.classList.remove('dragover');
+        });
+        
+        area.addEventListener('drop', (e) => {
+            e.preventDefault();
+            area.classList.remove('dragover');
             
-            if (viewsChart) viewsChart.destroy();
+            const input = area.querySelector('input[type="file"]');
+            if (e.dataTransfer.files.length) {
+                input.files = e.dataTransfer.files;
+                handleFileSelect(input.files[0], areaId === 'videoUploadArea' ? 'video' : 'thumb');
+            }
+        });
+    });
+}
+
+// NEW: Setup file input listeners
+function setupFileInputs() {
+    const videoInput = document.getElementById('videoFile');
+    const thumbInput = document.getElementById('thumbFile');
+    
+    if (videoInput) {
+        videoInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelect(e.target.files[0], 'video');
+            }
+        });
+    }
+    
+    if (thumbInput) {
+        thumbInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelect(e.target.files[0], 'thumb');
+            }
+        });
+    }
+}
+
+// NEW: Handle file selection with thumbnail generation
+function handleFileSelect(file, type) {
+    if (type === 'video') {
+        // Update UI to show selected file
+        const area = document.getElementById('videoUploadArea');
+        area.innerHTML = `
+            <i class="fas fa-file-video text-4xl text-primary mb-3"></i>
+            <p class="text-white font-semibold">${file.name}</p>
+            <p class="text-muted text-sm">${formatFileSize(file.size)}</p>
+            <input type="file" id="videoFile" class="hidden" accept="video/*">
+        `;
+        
+        // Re-attach listener
+        const newInput = area.querySelector('input');
+        newInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFileSelect(e.target.files[0], 'video');
+        });
+        
+        // Auto-generate thumbnail at 3 seconds
+        generateVideoThumbnail(file);
+    } else {
+        // Thumbnail selected
+        const area = document.getElementById('thumbUploadArea');
+        area.innerHTML = `
+            <i class="fas fa-image text-4xl text-primary mb-3"></i>
+            <p class="text-white font-semibold">${file.name}</p>
+            <p class="text-muted text-sm">${formatFileSize(file.size)}</p>
+            <input type="file" id="thumbFile" class="hidden" accept="image/*">
+        `;
+        
+        const newInput = area.querySelector('input');
+        newInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFileSelect(e.target.files[0], 'thumb');
+        });
+    }
+}
+
+// NEW: Generate video thumbnail at 3 seconds
+function generateVideoThumbnail(videoFile) {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.muted = true;
+        video.playsInline = true;
+        
+        video.onloadedmetadata = () => {
+            // Seek to 3 seconds or 10% of duration, whichever is less
+            const seekTime = Math.min(3, video.duration * 0.1);
+            video.currentTime = seekTime;
+        };
+        
+        video.onseeked = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
             
-            const allContent = [...videos, ...shorts].sort((a, b) => 
-                new Date(a.addedAt) - new Date(b.addedAt)
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to blob
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    // Create file from blob
+                    const thumbFile = new File([blob], `thumb_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                    
+                    // Store for upload
+                    window.generatedThumbnail = thumbFile;
+                    
+                    // Update UI
+                    const area = document.getElementById('thumbUploadArea');
+                    area.innerHTML = `
+                        <i class="fas fa-magic text-4xl text-primary mb-3"></i>
+                        <p class="text-white font-semibold">Auto-generated thumbnail</p>
+                        <p class="text-muted text-sm">At 3 second mark</p>
+                        <input type="file" id="thumbFile" class="hidden" accept="image/*">
+                    `;
+                    
+                    showToast('Thumbnail auto-generated from video', 'success');
+                    resolve(thumbFile);
+                }
+                URL.revokeObjectURL(video.src);
+            }, 'image/jpeg', 0.8);
+        };
+        
+        video.onerror = () => {
+            console.error('Failed to generate thumbnail');
+            URL.revokeObjectURL(video.src);
+            resolve(null);
+        };
+        
+        video.src = URL.createObjectURL(videoFile);
+    });
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// FIXED: Start upload with proper error handling
+async function startUpload() {
+    const token = localStorage.getItem('creatorToken');
+    if (!token) {
+        showToast('Please login first', 'error');
+        return;
+    }
+    
+    const type = document.getElementById('contentType').value;
+    const title = document.getElementById('videoTitle').value.trim();
+    const category = document.getElementById('videoCategory').value;
+    const tagsInput = document.getElementById('videoTags').value;
+    const description = document.getElementById('videoDescription').value;
+    const videoFile = document.getElementById('videoFile').files[0];
+    
+    // Check for generated thumbnail or uploaded one
+    let thumbFile = document.getElementById('thumbFile').files[0];
+    if (!thumbFile && window.generatedThumbnail) {
+        thumbFile = window.generatedThumbnail;
+    }
+    
+    if (!title) {
+        showToast('Please enter a title', 'error');
+        document.getElementById('videoTitle').focus();
+        return;
+    }
+    
+    if (!videoFile) {
+        showToast('Please select a video file', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    
+    try {
+        // Step 1: Upload video to R2
+        showToast('Uploading video...', 'info');
+        const videoProgress = document.getElementById('videoProgress');
+        videoProgress.classList.add('active');
+        
+        const videoUrl = await uploadFileToR2(videoFile, type === 'short' ? 'shorts' : 'videos', 
+            (progress) => {
+                document.getElementById('videoProgressFill').style.width = progress + '%';
+                document.getElementById('videoProgressText').textContent = Math.round(progress) + '%';
+            }
+        );
+        
+        document.getElementById('videoProgressStatus').textContent = 'Video uploaded!';
+        
+        // Step 2: Upload thumbnail if available
+        let thumbnailUrl = '';
+        if (thumbFile) {
+            const thumbProgress = document.getElementById('thumbProgress');
+            thumbProgress.classList.add('active');
+            
+            thumbnailUrl = await uploadFileToR2(thumbFile, type === 'short' ? 'shorts/thumbs' : 'thumbs',
+                (progress) => {
+                    document.getElementById('thumbProgressFill').style.width = progress + '%';
+                    document.getElementById('thumbProgressText').textContent = Math.round(progress) + '%';
+                }
             );
             
-            const dates = allContent.map(c => new Date(c.addedAt).toLocaleDateString());
-            const views = allContent.map(c => c.views || 0);
-            
-            viewsChart = new Chart(ctx1, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Views',
-                        data: views,
-                        borderColor: '#ff0050',
-                        backgroundColor: 'rgba(255,0,80,0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255,255,255,0.1)' },
-                            ticks: { color: '#888' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#888' }
-                        }
-                    }
-                }
-            });
-            
-            // Performance chart
-            const ctx2 = document.getElementById('performanceChart').getContext('2d');
-            
-            if (performanceChart) performanceChart.destroy();
-            
-            const videoViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
-            const shortViews = shorts.reduce((sum, s) => sum + (s.views || 0), 0);
-            
-            performanceChart = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Videos', 'Shorts'],
-                    datasets: [{
-                        data: [videoViews, shortViews],
-                        backgroundColor: ['#ff0050', '#00f2ea']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#888' }
-                        }
-                    }
-                }
-            });
+            document.getElementById('thumbProgressStatus').textContent = 'Thumbnail uploaded!';
         }
-
-        // ==================== UPLOAD ====================
-        function selectType(type) {
-            document.getElementById('contentType').value = type;
+        
+        // Step 3: Save metadata
+        showToast('Saving video info...', 'info');
+        
+        const tags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
+        const duration = await getVideoDuration(videoFile);
+        
+        const endpoint = type === 'short' ? '/creator/upload/short' : '/creator/upload/video';
+        const metadata = {
+            title,
+            videoUrl,
+            thumbnail: thumbnailUrl,
+            duration: duration || '0:00',
+            category,
+            tags,
+            description: type === 'video' ? description : undefined
+        };
+        
+        const response = await fetch(`${CONFIG.apiEndpoint}${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Creator-Token': token
+            },
+            body: JSON.stringify(metadata)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showToast('Upload successful!', 'success');
             
-            document.querySelectorAll('.type-option').forEach(o => o.classList.remove('active'));
-            document.getElementById(type === 'video' ? 'typeVideo' : 'typeShort').classList.add('active');
+            // Reset form
+            document.getElementById('videoTitle').value = '';
+            document.getElementById('videoTags').value = '';
+            document.getElementById('videoDescription').value = '';
+            window.generatedThumbnail = null;
             
-            // Show/hide description for shorts
-            document.getElementById('descriptionGroup').style.display = type === 'video' ? 'block' : 'none';
+            // Reset file inputs
+            resetFileInput('videoUploadArea', 'videoFile', 'video/*', 'video');
+            resetFileInput('thumbUploadArea', 'thumbFile', 'image/*', 'thumb');
+            
+            videoProgress.classList.remove('active');
+            document.getElementById('thumbProgress').classList.remove('active');
+            
+            // Switch to content tab
+            switchTab(type === 'short' ? 'shorts' : 'videos');
+        } else {
+            throw new Error(result.error || 'Upload failed');
         }
+        
+    } catch (error) {
+        console.error('Upload error:', error);
+        showToast(error.message || 'Upload failed. Please try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload"></i> Upload Content';
+    }
+}
 
-        function setupDragDrop() {
-            const areas = ['videoUploadArea', 'thumbUploadArea'];
-            
-            areas.forEach(areaId => {
-                const area = document.getElementById(areaId);
-                if (!area) return;
-                
-                area.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    area.classList.add('dragover');
-                });
-                
-                area.addEventListener('dragleave', () => {
-                    area.classList.remove('dragover');
-                });
-                
-                area.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    area.classList.remove('dragover');
-                    
-                    const input = area.querySelector('input[type="file"]');
-                    if (e.dataTransfer.files.length) {
-                        input.files = e.dataTransfer.files;
-                    }
-                });
-            });
-        }
+// NEW: Reset file input area
+function resetFileInput(areaId, inputId, accept, type) {
+    const area = document.getElementById(areaId);
+    const icon = type === 'video' ? 'fa-cloud-upload-alt' : 'fa-image';
+    const text = type === 'video' ? 'Click or drag video file here' : 'Click or drag thumbnail';
+    const subtext = type === 'video' ? 'MP4, MKV, WebM (Max 2GB)' : 'JPG, PNG, WebP';
+    
+    area.innerHTML = `
+        <i class="fas ${icon} text-4xl text-muted mb-3"></i>
+        <p class="text-muted">${text}</p>
+        <p class="text-sm text-muted mt-1">${subtext}</p>
+        <input type="file" id="${inputId}" class="hidden" accept="${accept}">
+    `;
+    
+    const newInput = area.querySelector('input');
+    newInput.addEventListener('change', (e) => {
+        if (e.target.files.length) handleFileSelect(e.target.files[0], type);
+    });
+}
 
-        async function startUpload() {
-            const token = localStorage.getItem('creatorToken');
-            if (!token) {
-                showToast('Please login first', 'error');
-                return;
+// NEW: Get video duration
+function getVideoDuration(file) {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        
+        video.onloadedmetadata = () => {
+            URL.revokeObjectURL(video.src);
+            const minutes = Math.floor(video.duration / 60);
+            const seconds = Math.floor(video.duration % 60);
+            resolve(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        };
+        
+        video.onerror = () => {
+            URL.revokeObjectURL(video.src);
+            resolve('0:00');
+        };
+        
+        video.src = URL.createObjectURL(file);
+    });
+}
+
+// FIXED: Upload file to R2 via Worker
+function uploadFileToR2(file, path, onProgress) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', path);
+        formData.append('filename', `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`);
+        
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable && onProgress) {
+                const progress = (e.loaded / e.total) * 100;
+                onProgress(progress);
             }
-            
-            const type = document.getElementById('contentType').value;
-            const title = document.getElementById('videoTitle').value;
-            const category = document.getElementById('videoCategory').value;
-            const tags = document.getElementById('videoTags').value.split(',').map(t => t.trim()).filter(t => t);
-            const description = document.getElementById('videoDescription').value;
-            const videoFile = document.getElementById('videoFile').files[0];
-            const thumbFile = document.getElementById('thumbFile').files[0];
-            
-            if (!title || !videoFile) {
-                showToast('Please fill in all required fields', 'error');
-                return;
-            }
-            
-            const btn = document.getElementById('uploadBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-            
-            try {
-                // Step 1: Upload video to R2
-                showToast('Uploading video file...', 'info');
-                const videoProgress = document.getElementById('videoProgress');
-                videoProgress.classList.add('active');
-                
-                const videoUrl = await uploadFile(videoFile, type === 'short' ? 'Xplit_vids/shorts' : 'Xplit_vids', 
-                    (progress) => {
-                        document.getElementById('videoProgressFill').style.width = progress + '%';
-                        document.getElementById('videoProgressText').textContent = Math.round(progress) + '%';
-                    }
-                );
-                
-                document.getElementById('videoProgressStatus').textContent = 'Complete!';
-                
-                // Step 2: Upload thumbnail if provided
-                let thumbnailUrl = '';
-                if (thumbFile) {
-                    const thumbProgress = document.getElementById('thumbProgress');
-                    thumbProgress.classList.add('active');
-                    
-                    const thumbPath = type === 'short' ? 'Xplit_vids/shorts/thumbnails' : 'Xplit_vids/thumbnails';
-                    thumbnailUrl = await uploadFile(thumbFile, thumbPath,
-                        (progress) => {
-                            document.getElementById('thumbProgressFill').style.width = progress + '%';
-                            document.getElementById('thumbProgressText').textContent = Math.round(progress) + '%';
-                        }
-                    );
-                    
-                    document.getElementById('thumbProgressStatus').textContent = 'Complete!';
-                }
-                
-                // Step 3: Save metadata
-                showToast('Saving metadata...', 'info');
-                
-                const endpoint = type === 'short' ? '/creator/upload/short' : '/creator/upload/video';
-                const metadata = {
-                    title,
-                    videoUrl,
-                    thumbnail: thumbnailUrl,
-                    duration: '0:00', // Will be detected by player
-                    category,
-                    tags,
-                    description: type === 'video' ? description : undefined
-                };
-                
-                const response = await fetch(`${CONFIG.apiEndpoint}${endpoint}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Creator-Token': token
-                    },
-                    body: JSON.stringify(metadata)
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    showToast('Upload successful!', 'success');
-                    
-                    // Reset form
-                    document.getElementById('videoTitle').value = '';
-                    document.getElementById('videoTags').value = '';
-                    document.getElementById('videoDescription').value = '';
-                    document.getElementById('videoFile').value = '';
-                    document.getElementById('thumbFile').value = '';
-                    
-                    videoProgress.classList.remove('active');
-                    document.getElementById('thumbProgress').classList.remove('active');
-                    
-                    // Switch to videos tab
-                    switchTab(type === 'short' ? 'shorts' : 'videos');
-                } else {
-                    throw new Error(result.error || 'Upload failed');
-                }
-                
-            } catch (error) {
-                showToast(error.message || 'Upload failed', 'error');
-                console.error('Upload error:', error);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-upload"></i> Upload Content';
-            }
-        }
-
-        function uploadFile(file, path, onProgress) {
-            return new Promise((resolve, reject) => {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('path', path);
-                formData.append('filename', Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_'));
-                
-                const xhr = new XMLHttpRequest();
-                
-                xhr.upload.addEventListener('progress', (e) => {
-                    if (e.lengthComputable) {
-                        const progress = (e.loaded / e.total) * 100;
-                        onProgress(progress);
-                    }
-                });
-                
-                xhr.open('POST', `${CONFIG.apiEndpoint}/upload/file`);
-                xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('creatorToken')}`);
-                
-                xhr.onload = () => {
-                    if (xhr.status === 200) {
-                        const response = JSON.parse(xhr.responseText);
+        });
+        
+        xhr.open('POST', `${CONFIG.apiEndpoint}/upload/file`);
+        
+        // FIXED: Use X-Creator-Token header instead of Authorization
+        xhr.setRequestHeader('X-Creator-Token', localStorage.getItem('creatorToken'));
+        
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success && response.url) {
                         resolve(response.url);
                     } else {
-                        reject(new Error('Upload failed'));
+                        reject(new Error(response.error || 'Upload failed'));
                     }
-                };
-                
-                xhr.onerror = () => reject(new Error('Network error'));
-                
-                xhr.send(formData);
-            });
-        }
-
-        // ==================== MY CONTENT ====================
-        async function loadMyVideos() {
-            await loadContent('videos', 'videosGrid');
-        }
-
-        async function loadMyShorts() {
-            await loadContent('shorts', 'shortsGrid');
-        }
-
-        async function loadContent(type, containerId) {
-            const token = localStorage.getItem('creatorToken');
-            if (!token) return;
-            
-            const container = document.getElementById(containerId);
-            container.innerHTML = '<p class="text-muted text-center py-8">Loading...</p>';
-            
-            try {
-                const response = await fetch(`${CONFIG.apiEndpoint}/creator/content?type=${type}`, {
-                    headers: { 'X-Creator-Token': token }
-                });
-                
-                const data = await response.json();
-                const items = data[type] || [];
-                
-                if (items.length === 0) {
-                    container.innerHTML = `
-                        <div class="col-span-full text-center py-12 text-muted">
-                            <i class="fas fa-video text-4xl mb-3"></i>
-                            <p>No ${type} yet. Upload your first!</p>
-                        </div>
-                    `;
-                    return;
+                } catch (e) {
+                    reject(new Error('Invalid response'));
                 }
-                
-                container.innerHTML = items.map(item => `
-                    <div class="video-card">
-                        <img src="${item.thumbnail || ''}" 
-                             alt="${escapeHtml(item.title)}" 
-                             class="video-thumbnail"
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMTgwIj48cmVjdCBmaWxsPSIjMzMzIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIvPjx0ZXh0IGZpbGw9IiM4ODgiIHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm8gVGh1bWJuYWlsPC90ZXh0Pjwvc3ZnPg=='">
-                        <div class="video-info">
-                            <div class="video-title">${escapeHtml(item.title)}</div>
-                            <div class="video-meta">
-                                <span><i class="fas fa-eye"></i> ${formatNumber(item.views || 0)}</span>
-                                <span><i class="fas fa-heart"></i> ${formatNumber(item.likes || 0)}</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                container.innerHTML = '<p class="text-muted text-center py-8">Failed to load</p>';
+            } else {
+                try {
+                    const error = JSON.parse(xhr.responseText);
+                    reject(new Error(error.error || `HTTP ${xhr.status}`));
+                } catch (e) {
+                    reject(new Error(`Upload failed: HTTP ${xhr.status}`));
+                }
             }
-        }
+        };
+        
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.onabort = () => reject(new Error('Upload aborted'));
+        
+        xhr.send(formData);
+    });
+}
 
-        // ==================== UTILITIES ====================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle text-green-500' : type === 'error' ? 'fa-exclamation-circle text-red-500' : 'fa-info-circle text-primary'}"></i>
-                    <span>${message}</span>
+// ==================== MY CONTENT ====================
+async function loadMyVideos() {
+    await loadContent('videos', 'videosGrid');
+}
+
+async function loadMyShorts() {
+    await loadContent('shorts', 'shortsGrid');
+}
+
+async function loadContent(type, containerId) {
+    const token = localStorage.getItem('creatorToken');
+    if (!token) return;
+    
+    const container = document.getElementById(containerId);
+    container.innerHTML = '<p class="text-muted text-center py-8">Loading...</p>';
+    
+    try {
+        const response = await fetch(`${CONFIG.apiEndpoint}/creator/content?type=${type}`, {
+            headers: { 'X-Creator-Token': token }
+        });
+        
+        const data = await response.json();
+        const items = data[type] || [];
+        
+        if (items.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-12 text-muted">
+                    <i class="fas fa-video text-4xl mb-3"></i>
+                    <p>No ${type} yet. Upload your first!</p>
                 </div>
             `;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            return;
         }
+        
+        container.innerHTML = items.map(item => `
+            <div class="video-card">
+                <img src="${item.thumbnail || ''}" 
+                     alt="${escapeHtml(item.title)}" 
+                     class="video-thumbnail"
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMTgwIj48cmVjdCBmaWxsPSIjMzMzIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIvPjx0ZXh0IGZpbGw9IiM4ODgiIHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm8gVGh1bWJuYWlsPC90ZXh0Pjwvc3ZnPg=='">
+                <div class="video-info">
+                    <div class="video-title">${escapeHtml(item.title)}</div>
+                    <div class="video-meta">
+                        <span><i class="fas fa-eye"></i> ${formatNumber(item.displayViews || item.views || 0)}</span>
+                        <span><i class="fas fa-heart"></i> ${formatNumber(item.likes || 0)}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = '<p class="text-muted text-center py-8">Failed to load</p>';
+    }
+}
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
+// ==================== UTILITIES ====================
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            <i class="fas ${type === 'success' ? 'fa-check-circle text-green-500' : type === 'error' ? 'fa-exclamation-circle text-red-500' : 'fa-info-circle text-primary'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
-        function formatNumber(num) {
-            if (!num || isNaN(num)) return '0';
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return num.toString();
-        }
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function formatNumber(num) {
+    if (!num || isNaN(num)) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
     </script>
 </body>
 </html>
