@@ -5,13 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Creator Studio - Xplitleaks</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Chart.js for Stats -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -39,7 +34,6 @@
             line-height: 1.5;
         }
 
-        /* Logo Animation */
         .logo {
             font-size: 1.5rem;
             font-weight: bold;
@@ -56,7 +50,6 @@
             50% { background-position: 100% 50%; }
         }
 
-        /* Auth Screen */
         .auth-screen {
             position: fixed;
             top: 0;
@@ -163,16 +156,6 @@
             transform: none;
         }
 
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.05);
-        }
-
-        /* Main App */
         .app-container {
             display: none;
             max-width: 1400px;
@@ -184,7 +167,6 @@
             display: block;
         }
 
-        /* Header */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -214,7 +196,6 @@
             font-size: 1.2rem;
         }
 
-        /* Tabs */
         .tabs {
             display: flex;
             gap: 0.5rem;
@@ -244,7 +225,6 @@
             border-color: var(--primary);
         }
 
-        /* Cards */
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -262,7 +242,6 @@
             gap: 0.5rem;
         }
 
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -296,14 +275,13 @@
             color: var(--text-muted);
         }
 
-        /* Chart Container */
         .chart-container {
             position: relative;
             height: 300px;
             margin-top: 1rem;
         }
 
-        /* Upload Area */
+        /* Upload Area - Fixed to preserve input */
         .upload-area {
             border: 2px dashed var(--border);
             border-radius: 12px;
@@ -312,6 +290,7 @@
             cursor: pointer;
             transition: all 0.2s;
             background: rgba(255,255,255,0.02);
+            position: relative;
         }
 
         .upload-area:hover {
@@ -324,7 +303,41 @@
             background: rgba(255,0,80,0.1);
         }
 
-        /* Progress */
+        .upload-area.has-file {
+            border-color: var(--primary);
+            background: rgba(255,0,80,0.05);
+        }
+
+        /* Thumbnail Preview */
+        .thumb-preview {
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 16/9;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 12px auto 0;
+            display: none;
+            border: 2px solid var(--border);
+            background: #000;
+        }
+
+        .thumb-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumb-preview.visible {
+            display: block;
+        }
+
+        .preview-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            text-align: center;
+        }
+
         .progress-container {
             margin-top: 1rem;
             display: none;
@@ -357,7 +370,6 @@
             color: var(--text-muted);
         }
 
-        /* Video Grid */
         .video-grid {
             display: grid;
             grid-template-columns: repeat(1, 1fr);
@@ -415,7 +427,6 @@
             gap: 1rem;
         }
 
-        /* Type Selector */
         .type-selector {
             display: flex;
             gap: 1rem;
@@ -444,7 +455,6 @@
             color: var(--primary);
         }
 
-        /* Toast */
         .toast-container {
             position: fixed;
             top: 20px;
@@ -477,7 +487,6 @@
             }
         }
 
-        /* Footer */
         footer {
             background: var(--bg-card);
             border-top: 1px solid var(--border);
@@ -672,14 +681,22 @@
                     <textarea id="videoDescription" class="form-control" rows="3" placeholder="Video description..."></textarea>
                 </div>
 
+                <!-- VIDEO UPLOAD -->
                 <div class="form-group">
                     <label>Video File *</label>
                     <div class="upload-area" id="videoUploadArea" onclick="document.getElementById('videoFile').click()">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-muted mb-3"></i>
-                        <p class="text-muted">Click or drag video file here</p>
-                        <p class="text-sm text-muted mt-1">MP4, MKV, WebM (Max 2GB)</p>
+                        <i class="fas fa-cloud-upload-alt text-4xl text-muted mb-3" id="videoIcon"></i>
+                        <p class="text-muted" id="videoText1">Click or drag video file here</p>
+                        <p class="text-sm text-muted mt-1" id="videoText2">MP4, MKV, WebM (Max 2GB)</p>
                         <input type="file" id="videoFile" class="hidden" accept="video/*" required>
                     </div>
+                    
+                    <!-- Video Thumbnail Preview -->
+                    <div class="thumb-preview" id="videoPreviewContainer">
+                        <img src="" alt="Video Preview" id="videoPreviewImg">
+                    </div>
+                    <p class="preview-label" id="videoPreviewLabel" style="display:none;">Video thumbnail preview (auto-generated)</p>
+                    
                     <div class="progress-container" id="videoProgress">
                         <div class="progress-bar">
                             <div class="progress-fill" id="videoProgressFill"></div>
@@ -691,14 +708,22 @@
                     </div>
                 </div>
 
+                <!-- THUMBNAIL UPLOAD -->
                 <div class="form-group">
-                    <label>Thumbnail (optional)</label>
+                    <label>Thumbnail (optional - auto-generated if empty)</label>
                     <div class="upload-area" id="thumbUploadArea" onclick="document.getElementById('thumbFile').click()">
-                        <i class="fas fa-image text-4xl text-muted mb-3"></i>
-                        <p class="text-muted">Click or drag thumbnail</p>
-                        <p class="text-sm text-muted mt-1">JPG, PNG, WebP</p>
+                        <i class="fas fa-image text-4xl text-muted mb-3" id="thumbIcon"></i>
+                        <p class="text-muted" id="thumbText1">Click or drag thumbnail</p>
+                        <p class="text-sm text-muted mt-1" id="thumbText2">JPG, PNG, WebP</p>
                         <input type="file" id="thumbFile" class="hidden" accept="image/*">
                     </div>
+                    
+                    <!-- Thumbnail Preview -->
+                    <div class="thumb-preview" id="thumbPreviewContainer">
+                        <img src="" alt="Thumbnail Preview" id="thumbPreviewImg">
+                    </div>
+                    <p class="preview-label" id="thumbPreviewLabel" style="display:none;">Selected thumbnail</p>
+                    
                     <div class="progress-container" id="thumbProgress">
                         <div class="progress-bar">
                             <div class="progress-fill" id="thumbProgressFill"></div>
@@ -761,17 +786,12 @@
     </footer>
 
     <script>
-        // ==================== FIXED UPLOAD CONFIGURATION ====================
+        // ==================== CONFIGURATION ====================
         const CONFIG = {
             apiEndpoint: 'https://xplitleaks-api.dylancoral.workers.dev/api',
             sessionId: localStorage.getItem('sessionId') || generateSessionId()
         };
         localStorage.setItem('sessionId', CONFIG.sessionId);
-
-        // GLOBAL FILE STORAGE - Prevents inputs from being destroyed
-        window.selectedVideoFile = null;
-        window.selectedThumbFile = null;
-        window.generatedThumbnail = null;
 
         let currentUser = null;
         let siteConfig = {};
@@ -822,9 +842,7 @@
         async function verifyToken(token) {
             try {
                 const response = await fetch(`${CONFIG.apiEndpoint}/creator/profile`, {
-                    headers: {
-                        'X-Creator-Token': token
-                    }
+                    headers: { 'X-Creator-Token': token }
                 });
                 
                 if (response.ok) {
@@ -852,10 +870,8 @@
             }
         }
 
-        // Login
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
@@ -881,10 +897,8 @@
             }
         });
 
-        // Signup
         document.getElementById('signupForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const username = document.getElementById('signupUsername').value;
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
@@ -901,7 +915,6 @@
                 if (response.ok) {
                     showToast('Account created! Waiting for admin approval.', 'success');
                     switchAuthTab('login');
-                    document.querySelector('.auth-tab').click();
                 } else {
                     showToast(data.error || 'Signup failed', 'error');
                 }
@@ -919,10 +932,8 @@
         function showApp() {
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.add('active');
-            
             document.getElementById('userName').textContent = currentUser.username;
             document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
-            
             loadDashboard();
         }
 
@@ -930,10 +941,8 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
             event.target.closest('.tab-btn').classList.add('active');
-            
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.getElementById(tab).classList.remove('hidden');
-            
             if (tab === 'dashboard') loadDashboard();
             if (tab === 'videos') loadMyVideos();
             if (tab === 'shorts') loadMyShorts();
@@ -942,26 +951,16 @@
         // ==================== DASHBOARD ====================
         async function loadDashboard() {
             if (!currentUser) return;
-            
             try {
                 const response = await fetch(`${CONFIG.apiEndpoint}/creator/content`, {
-                    headers: {
-                        'X-Creator-Token': localStorage.getItem('creatorToken')
-                    }
+                    headers: { 'X-Creator-Token': localStorage.getItem('creatorToken') }
                 });
-                
                 const data = await response.json();
-                
                 const videos = data.videos || [];
                 const shorts = data.shorts || [];
+                let totalViews = 0, totalLikes = 0;
                 
-                let totalViews = 0;
-                let totalLikes = 0;
-                
-                videos.forEach(v => {
-                    totalViews += (v.displayViews || v.views || 0);
-                });
-                
+                videos.forEach(v => totalViews += (v.displayViews || v.views || 0));
                 shorts.forEach(s => {
                     totalViews += (s.displayViews || s.views || 0);
                     totalLikes += (s.likes || 0);
@@ -971,9 +970,7 @@
                 document.getElementById('statShorts').textContent = shorts.length;
                 document.getElementById('statViews').textContent = formatNumber(totalViews);
                 document.getElementById('statLikes').textContent = formatNumber(totalLikes);
-                
                 renderCharts(videos, shorts);
-                
             } catch (error) {
                 console.error('Failed to load dashboard:', error);
             }
@@ -981,176 +978,110 @@
 
         function renderCharts(videos, shorts) {
             const ctx1 = document.getElementById('viewsChart').getContext('2d');
-            
             if (viewsChart) viewsChart.destroy();
-            
-            const allContent = [...videos, ...shorts].sort((a, b) => 
-                new Date(a.addedAt) - new Date(b.addedAt)
-            );
-            
+            const allContent = [...videos, ...shorts].sort((a, b) => new Date(a.addedAt) - new Date(b.addedAt));
             const dates = allContent.map(c => new Date(c.addedAt).toLocaleDateString());
             const views = allContent.map(c => c.displayViews || c.views || 0);
             
             viewsChart = new Chart(ctx1, {
                 type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Views',
-                        data: views,
-                        borderColor: '#ff0050',
-                        backgroundColor: 'rgba(255,0,80,0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255,255,255,0.1)' },
-                            ticks: { color: '#888' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#888' }
-                        }
-                    }
-                }
+                data: { labels: dates, datasets: [{ label: 'Views', data: views, borderColor: '#ff0050', backgroundColor: 'rgba(255,0,80,0.1)', tension: 0.4, fill: true }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
             });
             
             const ctx2 = document.getElementById('performanceChart').getContext('2d');
-            
             if (performanceChart) performanceChart.destroy();
-            
             const videoViews = videos.reduce((sum, v) => sum + (v.displayViews || v.views || 0), 0);
             const shortViews = shorts.reduce((sum, s) => sum + (s.displayViews || s.views || 0), 0);
             
             performanceChart = new Chart(ctx2, {
                 type: 'doughnut',
-                data: {
-                    labels: ['Videos', 'Shorts'],
-                    datasets: [{
-                        data: [videoViews, shortViews],
-                        backgroundColor: ['#ff0050', '#00f2ea']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#888' }
-                        }
-                    }
-                }
+                data: { labels: ['Videos', 'Shorts'], datasets: [{ data: [videoViews, shortViews], backgroundColor: ['#ff0050', '#00f2ea'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#888' } } } }
             });
         }
 
         // ==================== UPLOAD - FIXED ====================
         function selectType(type) {
             document.getElementById('contentType').value = type;
-            
             document.querySelectorAll('.type-option').forEach(o => o.classList.remove('active'));
             document.getElementById(type === 'video' ? 'typeVideo' : 'typeShort').classList.add('active');
-            
             document.getElementById('descriptionGroup').style.display = type === 'video' ? 'block' : 'none';
         }
 
         function setupDragDrop() {
-            const areas = ['videoUploadArea', 'thumbUploadArea'];
-            
-            areas.forEach(areaId => {
+            ['videoUploadArea', 'thumbUploadArea'].forEach(areaId => {
                 const area = document.getElementById(areaId);
                 if (!area) return;
                 
-                area.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    area.classList.add('dragover');
-                });
-                
-                area.addEventListener('dragleave', () => {
-                    area.classList.remove('dragover');
-                });
-                
+                area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('dragover'); });
+                area.addEventListener('dragleave', () => area.classList.remove('dragover'));
                 area.addEventListener('drop', (e) => {
                     e.preventDefault();
                     area.classList.remove('dragover');
-                    
                     const input = area.querySelector('input[type="file"]');
                     if (e.dataTransfer.files.length) {
                         input.files = e.dataTransfer.files;
-                        handleFileSelect(e.dataTransfer.files[0], areaId === 'videoUploadArea' ? 'video' : 'thumb');
+                        handleFileSelected(areaId === 'videoUploadArea' ? 'video' : 'thumb');
                     }
                 });
             });
         }
 
-        // Setup file input listeners
         function setupFileInputs() {
-            const videoInput = document.getElementById('videoFile');
-            const thumbInput = document.getElementById('thumbFile');
-            
-            if (videoInput) {
-                videoInput.addEventListener('change', (e) => {
-                    if (e.target.files.length) {
-                        handleFileSelect(e.target.files[0], 'video');
+            document.getElementById('videoFile').addEventListener('change', () => handleFileSelected('video'));
+            document.getElementById('thumbFile').addEventListener('change', () => handleFileSelected('thumb'));
+        }
+
+        // CRITICAL FIX: Read file directly from input, update UI without destroying input
+        function handleFileSelected(type) {
+            const input = document.getElementById(type === 'video' ? 'videoFile' : 'thumbFile');
+            const file = input.files[0];
+            if (!file) return;
+
+            if (type === 'video') {
+                const area = document.getElementById('videoUploadArea');
+                area.classList.add('has-file');
+                document.getElementById('videoIcon').className = 'fas fa-file-video text-4xl text-primary mb-3';
+                document.getElementById('videoText1').textContent = file.name;
+                document.getElementById('videoText1').className = 'text-white font-semibold';
+                document.getElementById('videoText2').textContent = formatFileSize(file.size);
+                
+                // Auto-generate thumbnail preview
+                generateVideoThumbnail(file).then(previewUrl => {
+                    if (previewUrl) {
+                        showPreview('videoPreviewContainer', 'videoPreviewImg', 'videoPreviewLabel', previewUrl, 'Video thumbnail preview (auto-generated)');
                     }
                 });
-            }
-            
-            if (thumbInput) {
-                thumbInput.addEventListener('change', (e) => {
-                    if (e.target.files.length) {
-                        handleFileSelect(e.target.files[0], 'thumb');
-                    }
-                });
+            } else {
+                const area = document.getElementById('thumbUploadArea');
+                area.classList.add('has-file');
+                document.getElementById('thumbIcon').className = 'fas fa-image text-4xl text-primary mb-3';
+                document.getElementById('thumbText1').textContent = file.name;
+                document.getElementById('thumbText1').className = 'text-white font-semibold';
+                document.getElementById('thumbText2').textContent = formatFileSize(file.size);
+                
+                // Show thumbnail preview immediately
+                const reader = new FileReader();
+                reader.onload = (e) => showPreview('thumbPreviewContainer', 'thumbPreviewImg', 'thumbPreviewLabel', e.target.result, 'Selected thumbnail');
+                reader.readAsDataURL(file);
             }
         }
 
-        // FIXED: Handle file selection WITHOUT destroying the input
-        function handleFileSelect(file, type) {
-            if (type === 'video') {
-                window.selectedVideoFile = file;
-                
-                const area = document.getElementById('videoUploadArea');
-                const icon = area.querySelector('i');
-                const texts = area.querySelectorAll('p');
-                
-                if (icon) icon.className = 'fas fa-file-video text-4xl text-primary mb-3';
-                if (texts[0]) {
-                    texts[0].className = 'text-white font-semibold';
-                    texts[0].textContent = file.name;
-                }
-                if (texts[1]) {
-                    texts[1].textContent = formatFileSize(file.size);
-                }
-                
-                // Auto-generate thumbnail at 3 seconds
-                generateVideoThumbnail(file);
-            } else {
-                window.selectedThumbFile = file;
-                window.generatedThumbnail = null;
-                
-                const area = document.getElementById('thumbUploadArea');
-                const icon = area.querySelector('i');
-                const texts = area.querySelectorAll('p');
-                
-                if (icon) icon.className = 'fas fa-image text-4xl text-primary mb-3';
-                if (texts[0]) {
-                    texts[0].className = 'text-white font-semibold';
-                    texts[0].textContent = file.name;
-                }
-                if (texts[1]) {
-                    texts[1].textContent = formatFileSize(file.size);
-                }
-            }
+        function showPreview(containerId, imgId, labelId, url, labelText) {
+            const container = document.getElementById(containerId);
+            const img = document.getElementById(imgId);
+            const label = document.getElementById(labelId);
+            
+            img.src = url;
+            container.classList.add('visible');
+            label.textContent = labelText;
+            label.style.display = 'block';
+        }
+
+        function hidePreview(containerId, labelId) {
+            document.getElementById(containerId).classList.remove('visible');
+            document.getElementById(labelId).style.display = 'none';
         }
 
         function formatFileSize(bytes) {
@@ -1161,13 +1092,13 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Generate video thumbnail at 3 seconds
         function generateVideoThumbnail(videoFile) {
             return new Promise((resolve) => {
                 const video = document.createElement('video');
                 video.preload = 'metadata';
                 video.muted = true;
                 video.playsInline = true;
+                video.crossOrigin = 'anonymous';
                 
                 video.onloadedmetadata = () => {
                     const seekTime = Math.min(3, video.duration * 0.1);
@@ -1176,39 +1107,18 @@
                 
                 video.onseeked = () => {
                     const canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 360;
                     
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
-                    canvas.toBlob((blob) => {
-                        if (blob) {
-                            const thumbFile = new File([blob], `thumb_${Date.now()}.jpg`, { type: 'image/jpeg' });
-                            window.generatedThumbnail = thumbFile;
-                            
-                            const area = document.getElementById('thumbUploadArea');
-                            const icon = area.querySelector('i');
-                            const texts = area.querySelectorAll('p');
-                            
-                            if (icon) icon.className = 'fas fa-magic text-4xl text-primary mb-3';
-                            if (texts[0]) {
-                                texts[0].className = 'text-white font-semibold';
-                                texts[0].textContent = 'Auto-generated thumbnail';
-                            }
-                            if (texts[1]) {
-                                texts[1].textContent = 'At 3 second mark';
-                            }
-                            
-                            showToast('Thumbnail auto-generated from video', 'success');
-                            resolve(thumbFile);
-                        }
-                        URL.revokeObjectURL(video.src);
-                    }, 'image/jpeg', 0.8);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    URL.revokeObjectURL(video.src);
+                    resolve(dataUrl);
                 };
                 
                 video.onerror = () => {
-                    console.error('Failed to generate thumbnail');
                     URL.revokeObjectURL(video.src);
                     resolve(null);
                 };
@@ -1217,13 +1127,20 @@
             });
         }
 
-        // FIXED: Start upload using STORED files
+        // Convert data URL to File object for upload
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) u8arr[n] = bstr.charCodeAt(n);
+            return new File([u8arr], filename, { type: mime });
+        }
+
         async function startUpload() {
             const token = localStorage.getItem('creatorToken');
-            if (!token) {
-                showToast('Please login first', 'error');
-                return;
-            }
+            if (!token) { showToast('Please login first', 'error'); return; }
             
             const type = document.getElementById('contentType').value;
             const title = document.getElementById('videoTitle').value.trim();
@@ -1231,24 +1148,24 @@
             const tagsInput = document.getElementById('videoTags').value;
             const description = document.getElementById('videoDescription').value;
             
-            // USE STORED FILE instead of reading from input
-            const videoFile = window.selectedVideoFile;
+            // CRITICAL FIX: Read file DIRECTLY from the input element (never destroyed)
+            const videoInput = document.getElementById('videoFile');
+            const videoFile = videoInput.files[0];
             
-            // Check for manual thumbnail, then generated thumbnail
-            let thumbFile = window.selectedThumbFile;
-            if (!thumbFile && window.generatedThumbnail) {
-                thumbFile = window.generatedThumbnail;
-            }
+            if (!title) { showToast('Please enter a title', 'error'); return; }
+            if (!videoFile) { showToast('Please select a video file', 'error'); return; }
+
+            // Get thumbnail: manual upload OR auto-generated preview OR null
+            const thumbInput = document.getElementById('thumbFile');
+            let thumbFile = thumbInput.files[0];
+            let thumbDataUrl = null;
             
-            if (!title) {
-                showToast('Please enter a title', 'error');
-                document.getElementById('videoTitle').focus();
-                return;
-            }
-            
-            if (!videoFile) {
-                showToast('Please select a video file', 'error');
-                return;
+            if (!thumbFile) {
+                // Try to use auto-generated thumbnail from preview
+                const previewImg = document.getElementById('videoPreviewImg');
+                if (previewImg.src && previewImg.src.startsWith('data:')) {
+                    thumbDataUrl = previewImg.src;
+                }
             }
 
             const btn = document.getElementById('uploadBtn');
@@ -1256,90 +1173,62 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
             
             try {
-                // Step 1: Upload video to R2
+                // Upload video
                 showToast('Uploading video...', 'info');
                 const videoProgress = document.getElementById('videoProgress');
                 videoProgress.classList.add('active');
                 
-                const videoUrl = await uploadFileToR2(videoFile, type === 'short' ? 'shorts' : 'videos', 
-                    (progress) => {
-                        document.getElementById('videoProgressFill').style.width = progress + '%';
-                        document.getElementById('videoProgressText').textContent = Math.round(progress) + '%';
-                    }
-                );
-                
+                const videoUrl = await uploadFileToR2(videoFile, type === 'short' ? 'shorts' : 'videos', (p) => {
+                    document.getElementById('videoProgressFill').style.width = p + '%';
+                    document.getElementById('videoProgressText').textContent = Math.round(p) + '%';
+                });
                 document.getElementById('videoProgressStatus').textContent = 'Video uploaded!';
                 
-                // Step 2: Upload thumbnail if available
+                // Upload thumbnail
                 let thumbnailUrl = '';
                 if (thumbFile) {
                     const thumbProgress = document.getElementById('thumbProgress');
                     thumbProgress.classList.add('active');
-                    
-                    thumbnailUrl = await uploadFileToR2(thumbFile, type === 'short' ? 'shorts/thumbs' : 'thumbs',
-                        (progress) => {
-                            document.getElementById('thumbProgressFill').style.width = progress + '%';
-                            document.getElementById('thumbProgressText').textContent = Math.round(progress) + '%';
-                        }
-                    );
-                    
+                    thumbnailUrl = await uploadFileToR2(thumbFile, type === 'short' ? 'shorts/thumbs' : 'thumbs', (p) => {
+                        document.getElementById('thumbProgressFill').style.width = p + '%';
+                        document.getElementById('thumbProgressText').textContent = Math.round(p) + '%';
+                    });
                     document.getElementById('thumbProgressStatus').textContent = 'Thumbnail uploaded!';
+                } else if (thumbDataUrl) {
+                    // Upload auto-generated thumbnail
+                    const thumbProgress = document.getElementById('thumbProgress');
+                    thumbProgress.classList.add('active');
+                    const autoThumbFile = dataURLtoFile(thumbDataUrl, `thumb_${Date.now()}.jpg`);
+                    thumbnailUrl = await uploadFileToR2(autoThumbFile, type === 'short' ? 'shorts/thumbs' : 'thumbs', (p) => {
+                        document.getElementById('thumbProgressFill').style.width = p + '%';
+                        document.getElementById('thumbProgressText').textContent = Math.round(p) + '%';
+                    });
+                    document.getElementById('thumbProgressStatus').textContent = 'Auto-thumbnail uploaded!';
                 }
                 
-                // Step 3: Save metadata
+                // Save metadata
                 showToast('Saving video info...', 'info');
-                
                 const tags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
                 const duration = await getVideoDuration(videoFile);
                 
-                const endpoint = type === 'short' ? '/creator/upload/short' : '/creator/upload/video';
-                const metadata = {
-                    title,
-                    videoUrl,
-                    thumbnail: thumbnailUrl,
-                    duration: duration || '0:00',
-                    category,
-                    tags,
-                    description: type === 'video' ? description : undefined
-                };
-                
-                const response = await fetch(`${CONFIG.apiEndpoint}${endpoint}`, {
+                const response = await fetch(`${CONFIG.apiEndpoint}${type === 'short' ? '/creator/upload/short' : '/creator/upload/video'}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Creator-Token': token
-                    },
-                    body: JSON.stringify(metadata)
+                    headers: { 'Content-Type': 'application/json', 'X-Creator-Token': token },
+                    body: JSON.stringify({
+                        title, videoUrl, thumbnail: thumbnailUrl, duration: duration || '0:00',
+                        category, tags, description: type === 'video' ? description : undefined
+                    })
                 });
                 
                 const result = await response.json();
                 
                 if (response.ok) {
                     showToast('Upload successful!', 'success');
-                    
-                    // Reset form
-                    document.getElementById('videoTitle').value = '';
-                    document.getElementById('videoTags').value = '';
-                    document.getElementById('videoDescription').value = '';
-                    
-                    // Clear stored files
-                    window.selectedVideoFile = null;
-                    window.selectedThumbFile = null;
-                    window.generatedThumbnail = null;
-                    
-                    // Reset UI
-                    resetFileInput('videoUploadArea', 'videoFile', 'video/*', 'video');
-                    resetFileInput('thumbUploadArea', 'thumbFile', 'image/*', 'thumb');
-                    
-                    videoProgress.classList.remove('active');
-                    document.getElementById('thumbProgress').classList.remove('active');
-                    
-                    // Switch to content tab
+                    resetUploadForm();
                     switchTab(type === 'short' ? 'shorts' : 'videos');
                 } else {
                     throw new Error(result.error || 'Upload failed');
                 }
-                
             } catch (error) {
                 console.error('Upload error:', error);
                 showToast(error.message || 'Upload failed. Please try again.', 'error');
@@ -1349,48 +1238,55 @@
             }
         }
 
-        function resetFileInput(areaId, inputId, accept, type) {
-            const area = document.getElementById(areaId);
-            const icon = type === 'video' ? 'fa-cloud-upload-alt' : 'fa-image';
-            const text = type === 'video' ? 'Click or drag video file here' : 'Click or drag thumbnail';
-            const subtext = type === 'video' ? 'MP4, MKV, WebM (Max 2GB)' : 'JPG, PNG, WebP';
+        function resetUploadForm() {
+            document.getElementById('videoTitle').value = '';
+            document.getElementById('videoTags').value = '';
+            document.getElementById('videoDescription').value = '';
             
-            area.innerHTML = `
-                <i class="fas ${icon} text-4xl text-muted mb-3"></i>
-                <p class="text-muted">${text}</p>
-                <p class="text-sm text-muted mt-1">${subtext}</p>
-                <input type="file" id="${inputId}" class="hidden" accept="${accept}">
-            `;
+            // Reset video input and UI without destroying the input
+            const videoInput = document.getElementById('videoFile');
+            videoInput.value = '';
+            const videoArea = document.getElementById('videoUploadArea');
+            videoArea.classList.remove('has-file');
+            document.getElementById('videoIcon').className = 'fas fa-cloud-upload-alt text-4xl text-muted mb-3';
+            document.getElementById('videoText1').textContent = 'Click or drag video file here';
+            document.getElementById('videoText1').className = 'text-muted';
+            document.getElementById('videoText2').textContent = 'MP4, MKV, WebM (Max 2GB)';
+            hidePreview('videoPreviewContainer', 'videoPreviewLabel');
             
-            // Re-attach listener
-            const newInput = area.querySelector('input');
-            newInput.addEventListener('change', (e) => {
-                if (e.target.files.length) handleFileSelect(e.target.files[0], type);
-            });
+            // Reset thumbnail input and UI
+            const thumbInput = document.getElementById('thumbFile');
+            thumbInput.value = '';
+            const thumbArea = document.getElementById('thumbUploadArea');
+            thumbArea.classList.remove('has-file');
+            document.getElementById('thumbIcon').className = 'fas fa-image text-4xl text-muted mb-3';
+            document.getElementById('thumbText1').textContent = 'Click or drag thumbnail';
+            document.getElementById('thumbText1').className = 'text-muted';
+            document.getElementById('thumbText2').textContent = 'JPG, PNG, WebP';
+            hidePreview('thumbPreviewContainer', 'thumbPreviewLabel');
+            
+            // Hide progress bars
+            document.getElementById('videoProgress').classList.remove('active');
+            document.getElementById('thumbProgress').classList.remove('active');
+            document.getElementById('videoProgressFill').style.width = '0%';
+            document.getElementById('thumbProgressFill').style.width = '0%';
         }
 
         function getVideoDuration(file) {
             return new Promise((resolve) => {
                 const video = document.createElement('video');
                 video.preload = 'metadata';
-                
                 video.onloadedmetadata = () => {
                     URL.revokeObjectURL(video.src);
-                    const minutes = Math.floor(video.duration / 60);
-                    const seconds = Math.floor(video.duration % 60);
-                    resolve(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+                    const m = Math.floor(video.duration / 60);
+                    const s = Math.floor(video.duration % 60);
+                    resolve(`${m}:${s.toString().padStart(2, '0')}`);
                 };
-                
-                video.onerror = () => {
-                    URL.revokeObjectURL(video.src);
-                    resolve('0:00');
-                };
-                
+                video.onerror = () => { URL.revokeObjectURL(video.src); resolve('0:00'); };
                 video.src = URL.createObjectURL(file);
             });
         }
 
-        // Upload file to R2 via Worker
         function uploadFileToR2(file, path, onProgress) {
             return new Promise((resolve, reject) => {
                 const formData = new FormData();
@@ -1399,12 +1295,8 @@
                 formData.append('filename', `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`);
                 
                 const xhr = new XMLHttpRequest();
-                
                 xhr.upload.addEventListener('progress', (e) => {
-                    if (e.lengthComputable && onProgress) {
-                        const progress = (e.loaded / e.total) * 100;
-                        onProgress(progress);
-                    }
+                    if (e.lengthComputable && onProgress) onProgress((e.loaded / e.total) * 100);
                 });
                 
                 xhr.open('POST', `${CONFIG.apiEndpoint}/upload/file`);
@@ -1413,45 +1305,27 @@
                 xhr.onload = () => {
                     if (xhr.status === 200) {
                         try {
-                            const response = JSON.parse(xhr.responseText);
-                            if (response.success && response.url) {
-                                resolve(response.url);
-                            } else {
-                                reject(new Error(response.error || 'Upload failed'));
-                            }
-                        } catch (e) {
-                            reject(new Error('Invalid response'));
-                        }
+                            const res = JSON.parse(xhr.responseText);
+                            if (res.success && res.url) resolve(res.url);
+                            else reject(new Error(res.error || 'Upload failed'));
+                        } catch (e) { reject(new Error('Invalid response')); }
                     } else {
-                        try {
-                            const error = JSON.parse(xhr.responseText);
-                            reject(new Error(error.error || `HTTP ${xhr.status}`));
-                        } catch (e) {
-                            reject(new Error(`Upload failed: HTTP ${xhr.status}`));
-                        }
+                        try { const err = JSON.parse(xhr.responseText); reject(new Error(err.error || `HTTP ${xhr.status}`)); }
+                        catch (e) { reject(new Error(`HTTP ${xhr.status}`)); }
                     }
                 };
-                
-                xhr.onerror = () => reject(new Error('Network error during upload'));
-                xhr.onabort = () => reject(new Error('Upload aborted'));
-                
+                xhr.onerror = () => reject(new Error('Network error'));
                 xhr.send(formData);
             });
         }
 
         // ==================== MY CONTENT ====================
-        async function loadMyVideos() {
-            await loadContent('videos', 'videosGrid');
-        }
-
-        async function loadMyShorts() {
-            await loadContent('shorts', 'shortsGrid');
-        }
+        async function loadMyVideos() { await loadContent('videos', 'videosGrid'); }
+        async function loadMyShorts() { await loadContent('shorts', 'shortsGrid'); }
 
         async function loadContent(type, containerId) {
             const token = localStorage.getItem('creatorToken');
             if (!token) return;
-            
             const container = document.getElementById(containerId);
             container.innerHTML = '<p class="text-muted text-center py-8">Loading...</p>';
             
@@ -1459,25 +1333,17 @@
                 const response = await fetch(`${CONFIG.apiEndpoint}/creator/content?type=${type}`, {
                     headers: { 'X-Creator-Token': token }
                 });
-                
                 const data = await response.json();
                 const items = data[type] || [];
                 
                 if (items.length === 0) {
-                    container.innerHTML = `
-                        <div class="col-span-full text-center py-12 text-muted">
-                            <i class="fas fa-video text-4xl mb-3"></i>
-                            <p>No ${type} yet. Upload your first!</p>
-                        </div>
-                    `;
+                    container.innerHTML = `<div class="col-span-full text-center py-12 text-muted"><i class="fas fa-video text-4xl mb-3"></i><p>No ${type} yet. Upload your first!</p></div>`;
                     return;
                 }
                 
                 container.innerHTML = items.map(item => `
                     <div class="video-card">
-                        <img src="${item.thumbnail || ''}" 
-                             alt="${escapeHtml(item.title)}" 
-                             class="video-thumbnail"
+                        <img src="${item.thumbnail || ''}" alt="${escapeHtml(item.title)}" class="video-thumbnail"
                              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMTgwIj48cmVjdCBmaWxsPSIjMzMzIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIvPjx0ZXh0IGZpbGw9IiM4ODgiIHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm8gVGh1bWJuYWlsPC90ZXh0Pjwvc3ZnPg=='">
                         <div class="video-info">
                             <div class="video-title">${escapeHtml(item.title)}</div>
@@ -1488,7 +1354,6 @@
                         </div>
                     </div>
                 `).join('');
-                
             } catch (error) {
                 container.innerHTML = '<p class="text-muted text-center py-8">Failed to load</p>';
             }
@@ -1499,20 +1364,9 @@
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle text-green-500' : type === 'error' ? 'fa-exclamation-circle text-red-500' : 'fa-info-circle text-primary'}"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
+            toast.innerHTML = `<div class="flex items-center gap-3"><i class="fas ${type === 'success' ? 'fa-check-circle text-green-500' : type === 'error' ? 'fa-exclamation-circle text-red-500' : 'fa-info-circle text-primary'}"></i><span>${message}</span></div>`;
             container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
         function escapeHtml(str) {
