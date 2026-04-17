@@ -1377,30 +1377,40 @@
         }
 
         document.getElementById('configForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const placementUrls = Array.from(document.querySelectorAll('.placement-url'))
-                .map(i => i.value.trim()).filter(v => v);
-            const outstreamUrls = Array.from(document.querySelectorAll('.outstream-url'))
-                .map(i => i.value.trim()).filter(v => v);
-            
-            const config = {
-                siteName: document.getElementById('configSiteName').value,
-                siteLogo: document.getElementById('configSiteLogo').value,
-                primaryColor: document.getElementById('configPrimaryColor').value,
-                vastTagUrl: document.getElementById('configVastUrl').value,
-                placementUrls,
-                outstreamAdTags: outstreamUrls
-            };
-            
-            try {
-                await apiCall('/admin/config', 'PUT', config);
-                showToast('Configuration saved!', 'success');
-            } catch (error) {
-                showToast('Failed to save config', 'error');
-            }
-        });
+    e.preventDefault();
+    
+    // Collect placement URLs
+    const placementUrls = Array.from(document.querySelectorAll('.placement-url'))
+        .map(input => input.value.trim())
+        .filter(url => url.length > 0);
+    
+    // Collect outstream URLs
+    const outstreamUrls = Array.from(document.querySelectorAll('.outstream-url'))
+        .map(input => input.value.trim())
+        .filter(url => url.length > 0);
+    
+    const config = {
+        siteName: document.getElementById('configSiteName').value || 'Xplitleaks',
+        siteLogo: document.getElementById('configSiteLogo').value || null,
+        primaryColor: document.getElementById('configPrimaryColor').value || '#ff0050',
+        vastTagUrl: document.getElementById('configVastUrl').value || null,
+        placementUrls: placementUrls,
+        outstreamAdTags: outstreamUrls
+    };
+    
+    console.log('Saving config:', config);
+    
+    try {
+        const result = await apiCall('/admin/config', 'PUT', config);
+        showToast('Configuration saved successfully!', 'success');
+        console.log('Config saved:', result);
+    } catch (error) {
+        console.error('Config save error:', error);
+        showToast('Failed to save config: ' + error.message, 'error');
+    }
+});
 
+        
         // ==================== CREATORS ====================
         let allCreators = [];
 
