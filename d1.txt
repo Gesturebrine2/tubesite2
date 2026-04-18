@@ -1,3 +1,8 @@
+-- ============================================
+-- XPLITLEAKS DATABASE SCHEMA v3.0
+-- ============================================
+
+-- Videos table with fake views system
 CREATE TABLE IF NOT EXISTS videos (
     id TEXT PRIMARY KEY,
     numericId TEXT UNIQUE NOT NULL,
@@ -9,13 +14,17 @@ CREATE TABLE IF NOT EXISTS videos (
     category TEXT DEFAULT 'uncategorized',
     tags TEXT DEFAULT '[]',
     description TEXT,
+    creatorId TEXT,
     views INTEGER DEFAULT 0,
+    realViews INTEGER DEFAULT 0,
+    fakeViews INTEGER DEFAULT 0,
     type TEXT DEFAULT 'r2',
     status TEXT DEFAULT 'active',
     addedAt TEXT DEFAULT (datetime('now')),
     updatedAt TEXT DEFAULT (datetime('now'))
 );
 
+-- Shorts table with fake views system
 CREATE TABLE IF NOT EXISTS shorts (
     id TEXT PRIMARY KEY,
     numericId TEXT UNIQUE NOT NULL,
@@ -26,7 +35,10 @@ CREATE TABLE IF NOT EXISTS shorts (
     uploadDate TEXT NOT NULL,
     category TEXT DEFAULT 'uncategorized',
     tags TEXT DEFAULT '[]',
+    creatorId TEXT,
     views INTEGER DEFAULT 0,
+    realViews INTEGER DEFAULT 0,
+    fakeViews INTEGER DEFAULT 0,
     likes INTEGER DEFAULT 0,
     shares INTEGER DEFAULT 0,
     engagementScore REAL DEFAULT 0.0,
@@ -35,7 +47,7 @@ CREATE TABLE IF NOT EXISTS shorts (
     updatedAt TEXT DEFAULT (datetime('now'))
 );
 
-
+-- Tags table
 CREATE TABLE IF NOT EXISTS tags (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -43,6 +55,7 @@ CREATE TABLE IF NOT EXISTS tags (
     createdAt TEXT DEFAULT (datetime('now'))
 );
 
+-- Session history for recommendations
 CREATE TABLE IF NOT EXISTS session_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sessionId TEXT NOT NULL,
@@ -54,7 +67,7 @@ CREATE TABLE IF NOT EXISTS session_history (
     UNIQUE(sessionId, shortId)
 );
 
-
+-- Short interactions (likes, shares, views)
 CREATE TABLE IF NOT EXISTS short_interactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     shortId TEXT NOT NULL,
@@ -64,6 +77,16 @@ CREATE TABLE IF NOT EXISTS short_interactions (
     ipAddress TEXT,
     userAgent TEXT,
     timestamp TEXT DEFAULT (datetime('now'))
+);
+
+-- Video views tracking
+CREATE TABLE IF NOT EXISTS video_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    videoId TEXT NOT NULL,
+    sessionId TEXT NOT NULL,
+    watchDuration REAL DEFAULT 0,
+    ipAddress TEXT,
+    viewedAt TEXT DEFAULT (datetime('now'))
 );
 
 -- Site configuration table
@@ -94,34 +117,42 @@ CREATE TABLE IF NOT EXISTS creators (
     lastLogin TEXT
 );
 
--- Add creatorId to videos
-ALTER TABLE videos ADD COLUMN creatorId TEXT;
-ALTER TABLE videos ADD COLUMN description TEXT;
-
--- Add creatorId to shorts  
-ALTER TABLE shorts ADD COLUMN creatorId TEXT;
-
--- Video views tracking table
-CREATE TABLE IF NOT EXISTS video_views (
+-- Enhanced reports table
+CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    videoId TEXT NOT NULL,
-    sessionId TEXT NOT NULL,
-    watchDuration REAL DEFAULT 0,
-    ipAddress TEXT,
-    viewedAt TEXT DEFAULT (datetime('now'))
+    contentId TEXT NOT NULL,
+    contentType TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    details TEXT,
+    reporterEmail TEXT,
+    reporterName TEXT,
+    reporterPhone TEXT,
+    reporterSession TEXT,
+    status TEXT DEFAULT 'pending',
+    createdAt TEXT DEFAULT (datetime('now')),
+    resolvedAt TEXT
 );
 
--- Indexes
+-- ============================================
+-- INDEXES FOR PERFORMANCE
+-- ============================================
 CREATE INDEX IF NOT EXISTS idx_videos_creatorId ON videos(creatorId);
-CREATE INDEX IF NOT EXISTS idx_shorts_creatorId ON shorts(creatorId);
-CREATE INDEX IF NOT EXISTS idx_creators_status ON creators(status);
-CREATE INDEX IF NOT EXISTS idx_video_views_videoId ON video_views(videoId);
-
-
 CREATE INDEX IF NOT EXISTS idx_videos_status ON videos(status);
 CREATE INDEX IF NOT EXISTS idx_videos_addedAt ON videos(addedAt DESC);
+CREATE INDEX IF NOT EXISTS idx_videos_numericId ON videos(numericId);
+CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category);
+
+CREATE INDEX IF NOT EXISTS idx_shorts_creatorId ON shorts(creatorId);
 CREATE INDEX IF NOT EXISTS idx_shorts_status ON shorts(status);
 CREATE INDEX IF NOT EXISTS idx_shorts_addedAt ON shorts(addedAt DESC);
+CREATE INDEX IF NOT EXISTS idx_shorts_numericId ON shorts(numericId);
+CREATE INDEX IF NOT EXISTS idx_shorts_engagement ON shorts(engagementScore DESC);
+
+CREATE INDEX IF NOT EXISTS idx_creators_status ON creators(status);
+CREATE INDEX IF NOT EXISTS idx_creators_token ON creators(token);
+
 CREATE INDEX IF NOT EXISTS idx_tags_usage ON tags(usageCount DESC);
 CREATE INDEX IF NOT EXISTS idx_session_history_sessionId ON session_history(sessionId);
 CREATE INDEX IF NOT EXISTS idx_short_interactions_shortId ON short_interactions(shortId);
+CREATE INDEX IF NOT EXISTS idx_video_views_videoId ON video_views(videoId);
+CREATE INDEX IF NOT EXISTS idx_reports_contentId ON reports(contentId);
